@@ -10,4 +10,5 @@ long int beginningBlocks;
 int blockSize;
 int iNodeSize;
 int fileDescriptor;
+char * filename;
 #endif //FILESYSTEM_DISKDATA_H
