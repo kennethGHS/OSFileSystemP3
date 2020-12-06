@@ -4,7 +4,7 @@
 
 #ifndef FILESYSTEM_FILERW_H
 #define FILESYSTEM_FILERW_H
-#include "InodeStruct.h"
+#include "Inode.h"
 int writeBlocks(char * data, int amountData, int blocks);
 int getFreeBlock();
 int getRootInfo();
