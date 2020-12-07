@@ -4,12 +4,13 @@
 
 #ifndef FILESYSTEM_BLOCK_H
 #define FILESYSTEM_BLOCK_H
-enum state_t{
+
+enum state_t {
     FREE,
     USED
 };
 
-struct Block{
+struct Block {
     enum state_t state;
     char information[];
 };

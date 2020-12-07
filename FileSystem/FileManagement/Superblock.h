@@ -3,8 +3,8 @@
 //
 
 #ifndef FILESYSTEM_SUPERBLOCK_H
-#include <stdio.h>
 #define FILESYSTEM_SUPERBLOCK_H
+#include <stdio.h>
 
 struct Superblock {
     char filename[256];
