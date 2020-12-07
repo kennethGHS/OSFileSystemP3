@@ -4,10 +4,14 @@
 #include "FileManagement/FileRW.h"
 
 int main() {
+    // Create drive and print info
     struct Drive *drive = createDrive("drive.vsfs", 104857600, 4096, 1000, "jassonrm");
     checkIntegrity("drive.vsfs");
+
+    // Setup drive
     set_working_drive(drive);
+    set_current_user("jassonrm");
     struct FileDescriptor *fd = open_file("/prueba.exe");
-    write_file(fd, "Hola mundo!", 12);
+//    write_file(fd, "Hola mundo!", 12);
     return 0;
 }

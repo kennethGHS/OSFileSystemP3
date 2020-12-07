@@ -35,14 +35,16 @@ struct Drive *createDrive(char filename[256], int size, int block_size, int inod
     drive->superblock.inode_size = sizeof(struct iNode);
     drive->superblock.first_inode = sizeof(struct Superblock);
 
-    drive->root.type = DIRECTORY;
+    drive->root.type = DIRECTORY_START;
     drive->root.modified_datetime = raw_time;
     drive->root.created_datetime = raw_time;
     drive->root.size = 0;
+    drive->root.continuation_iNode = 0;
 
     memcpy(drive->superblock.filename, filename, 256);
     memcpy(drive->root.filename, "root", 256);
     memcpy(drive->root.owner, username, 32);
+    memset(drive->root.blocks, 0, 15);
 
     struct iNode empty = {.type = EMPTY};
 

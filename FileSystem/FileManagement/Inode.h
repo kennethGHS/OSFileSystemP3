@@ -9,7 +9,8 @@
 
 enum type_t {
     EMPTY,
-    DIRECTORY,
+    DIRECTORY_START,
+    DIRECTORY_EXTENSION,
     FILE_START,
     FILE_EXTENSION
 };

@@ -7,7 +7,7 @@
 
 struct FileDescriptor {
     struct Drive *drive;
-    struct Inode *inode;
+    struct iNode *inode;
     int cursor;
 };
 
