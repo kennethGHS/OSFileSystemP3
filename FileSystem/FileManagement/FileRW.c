@@ -28,7 +28,7 @@ int set_current_user(char username[32]) {
     memcpy(user, username, 32);
     return 0;
 }
-
+// TODO check that all intermediate inodes are directories
 struct iNode *open_inode(char *filename, enum type_t type) {
     // Select current directory to search from
     struct iNode *current_dir = malloc(sizeof(struct iNode));
@@ -39,7 +39,6 @@ struct iNode *open_inode(char *filename, enum type_t type) {
         cur_inode_index = working_drive->superblock.first_inode;
         using_root = 1;
     } else {
-        cwd_index = 288;
         fseek(drive_image, cwd_index, SEEK_SET);
         fread(current_dir, sizeof(struct iNode), 1, drive_image);
         cur_inode_index = cwd_index;
@@ -51,6 +50,7 @@ struct iNode *open_inode(char *filename, enum type_t type) {
     char *next_filename = strtok(NULL, "/");
     struct iNode *next_dir = malloc(sizeof(struct iNode));
     int found;
+    int had_to_be_created = 0;
 
     while (cur_filename != NULL) {
         found = 0;
@@ -63,7 +63,7 @@ struct iNode *open_inode(char *filename, enum type_t type) {
                 fread(next_dir, sizeof(struct iNode), 1, drive_image);
                 if (strcmp(next_dir->filename, cur_filename) == 0) {
                     current_dir = next_dir;
-                    cur_inode_index = current_dir->blocks[i];
+                    cur_inode_index = block_index;
                     cur_filename = next_filename;
                     next_filename = strtok(NULL, "/");
                     found = 1;
@@ -84,6 +84,7 @@ struct iNode *open_inode(char *filename, enum type_t type) {
                 return NULL;
             } else {
                 // Create file
+                had_to_be_created = 1;
                 memcpy(next_dir->filename, cur_filename, 256);
                 next_dir->type = type;
                 memcpy(next_dir->owner, user, 32);
@@ -187,8 +188,8 @@ struct iNode *open_inode(char *filename, enum type_t type) {
         }
     }
 
-    if (next_dir->type == DIRECTORY_START) {
-        printf("Error: directory already exists with that name.");
+    if (next_dir->type == DIRECTORY_START && !had_to_be_created) {
+        printf("Error: directory already exists with that name.\n");
         return NULL;
     } else {
         // Update root in memory if neccesary
@@ -219,6 +220,75 @@ int create_dir(char *filename) {
         return 1;
     }
 }
+// TODO check that all intermediate inodes are directories
+int change_directory(char *filename){
+    // Select current directory to search from
+    struct iNode *current_dir = malloc(sizeof(struct iNode));
+    unsigned long cur_inode_index;
+    int using_root;
+    if (filename[0] == '/') {
+        memcpy(current_dir, &(working_drive->root), sizeof(struct iNode));
+        cur_inode_index = working_drive->superblock.first_inode;
+        using_root = 1;
+    } else {
+        cwd_index = 288;
+        fseek(drive_image, cwd_index, SEEK_SET);
+        fread(current_dir, sizeof(struct iNode), 1, drive_image);
+        cur_inode_index = cwd_index;
+        using_root = 0;
+    }
+
+    // Split path
+    char *cur_filename = strtok(filename, "/");
+    char *next_filename = strtok(NULL, "/");
+    struct iNode *next_dir = malloc(sizeof(struct iNode));
+    int found;
+
+    while (cur_filename != NULL) {
+        found = 0;
+        // Search current filename in current_dir to get next dir
+        unsigned long block_index;
+        for (int i = 0; i < 15; i++) {
+            block_index = current_dir->blocks[i];
+            if (block_index != 0) {
+                fseek(drive_image, block_index, SEEK_SET);
+                fread(next_dir, sizeof(struct iNode), 1, drive_image);
+                if (strcmp(next_dir->filename, cur_filename) == 0) {
+                    current_dir = next_dir;
+                    cur_inode_index = block_index;
+                    cur_filename = next_filename;
+                    next_filename = strtok(NULL, "/");
+                    found = 1;
+                    break;
+                }
+            }
+        }
+
+        if (!found) {
+            if (current_dir->continuation_iNode != 0) {
+                // Check continuation_inode
+                cur_inode_index = current_dir->continuation_iNode;
+                fseek(drive_image, cur_inode_index, SEEK_SET);
+                fread(current_dir, sizeof(struct iNode), 1, drive_image);
+            } else if (next_filename != NULL) {
+                // If folder throw error
+                printf("Error: directory %s doesn't exists.\n", cur_filename);
+                return NULL;
+            } else {
+
+                // Exit main loop
+                break;
+            }
+        }
+    }
+
+    if (next_dir->type == DIRECTORY_START) {
+        cwd_index = cur_inode_index;
+        return 0;
+    } else {
+        return 1;
+    }
+};
 
 int write_file(struct FileDescriptor *fileDescriptor, char *data, int size) {
     return -1;

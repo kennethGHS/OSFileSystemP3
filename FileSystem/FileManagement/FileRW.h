@@ -18,6 +18,8 @@ struct FileDescriptor *open_file(char *filename);
 
 int create_dir(char *filename);
 
+int change_directory(char *filename);
+
 int write_file(struct FileDescriptor *fileDescriptor, char *data, int size);
 
 int list_directories();

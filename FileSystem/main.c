@@ -28,6 +28,13 @@ int main() {
         create_dir(name);
     }
     list_directories();
+    create_dir("/1-dir/another_test");
+    change_directory("1-dir");
+    create_dir("prueba1");
+    create_dir("prueba2");
+    open_file("prueba3");
+    open_file("prueba4");
+    list_directories();
 //    write_file(fd, "Hola mundo!", 12);
     return 0;
 }
