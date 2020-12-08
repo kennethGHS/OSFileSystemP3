@@ -16,7 +16,7 @@ int main() {
     // Open non existent file
     struct FileDescriptor *fd;
     char name[32];
-    for(int i = 0; i < 20; i++) {
+    for(int i = 0; i < 35; i++) {
         itoa(i, name, 10);
         fd = open_file(name);
     }

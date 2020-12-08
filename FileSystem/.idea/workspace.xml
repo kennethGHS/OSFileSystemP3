@@ -13,9 +13,7 @@
   <component name="ChangeListManager">
     <list default="true" id="362c5566-3c69-4bd8-ab40-bc7c6d66dbdc" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BootAndReset/DiskManagement.c" beforeDir="false" afterPath="$PROJECT_DIR$/BootAndReset/DiskManagement.c" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/FileManagement/FileRW.c" beforeDir="false" afterPath="$PROJECT_DIR$/FileManagement/FileRW.c" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/FileManagement/Inode.h" beforeDir="false" afterPath="$PROJECT_DIR$/FileManagement/Inode.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.c" beforeDir="false" afterPath="$PROJECT_DIR$/main.c" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -52,11 +50,6 @@
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
     </configuration>
-    <configuration default="true" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" PASS_PARENT_ENVS_2="true">
-      <method v="2">
-        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
-      </method>
-    </configuration>
     <configuration default="true" type="GradleAppRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" PASS_PARENT_ENVS_2="true">
       <method v="2">
         <option name="com.jetbrains.cidr.cpp.gradle.execution.GradleNativeBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
@@ -72,7 +65,8 @@
       <option name="presentableId" value="Default" />
       <updated>1607270810489</updated>
       <workItem from="1607270812896" duration="21601000" />
-      <workItem from="1607390033681" duration="13888000" />
+      <workItem from="1607390033681" duration="13963000" />
+      <workItem from="1607438385475" duration="5988000" />
     </task>
     <servers />
   </component>
@@ -84,25 +78,14 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/FileManagement/FileRW.c</url>
-          <line>82</line>
-          <option name="timeStamp" value="20" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/FileManagement/FileRW.c</url>
-          <line>178</line>
-          <option name="timeStamp" value="36" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/FileManagement/FileRW.c</url>
-          <line>145</line>
-          <option name="timeStamp" value="39" />
+          <line>234</line>
+          <option name="timeStamp" value="71" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
     <watches-manager>
       <configuration name="CMakeRunConfiguration">
-        <watch expression="current_dir-&gt;blocks" />
-        <watch expression="current_dir-&gt;blocks" />
+        <watch expression="current_dir-&gt;iNode_parent" />
       </configuration>
     </watches-manager>
   </component>

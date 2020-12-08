@@ -16,7 +16,7 @@ char user[32];
 int set_working_drive(struct Drive *drive) {
     working_drive = drive;
     cwd_index = working_drive->superblock.first_inode;
-    drive_image = fopen(drive->superblock.filename, "r+");
+    drive_image = fopen(drive->superblock.filename, "rb+");
     if (drive_image == NULL){
         printf("Error: Can't open drive.");
         return 1;
@@ -104,8 +104,7 @@ struct FileDescriptor *open_file(char *filename) {
                 }
 
                 // Search for empty inode for file and write
-                int inode_index = working_drive->superblock.first_inode;
-                fseek(drive_image, inode_index, SEEK_SET);
+                unsigned long inode_index = working_drive->superblock.first_inode;
                 struct iNode temp;
                 int found_inode = 0;
 
@@ -155,8 +154,7 @@ struct FileDescriptor *open_file(char *filename) {
                                 fread(&temp, sizeof(struct iNode), 1, drive_image);
 
                                 if (temp.type == EMPTY){
-                                    printf("Cont index: %ld", continuation_index);
-                                    current_dir->continuation_iNode = continuation_index; // TODO Fix this, for some reason when read value is corrupt
+                                    current_dir->continuation_iNode = continuation_index;
                                     fseek(drive_image, cur_inode_index, SEEK_SET);
                                     fwrite(current_dir, sizeof(struct iNode), 1, drive_image);
 
@@ -218,16 +216,16 @@ int list_directories(){
     struct iNode current;
     fseek(drive_image, cwd_index, SEEK_SET);
     fread(&current, sizeof(struct iNode), 1, drive_image);
-    printf("Current directory: %s %d\n", current.filename, current.type);
+    printf("Current directory: %s\n", current.filename);
 
     struct iNode sub_dir;
     while (1){
         for(int reference_index = 0; reference_index < 15; reference_index++){
-            printf("Block: %d Index: %d\n", reference_index, current.blocks[reference_index]);
+//            printf("Block: %d Index: %d\n", reference_index, current.blocks[reference_index]);
             if(current.blocks[reference_index] != 0){
                 fseek(drive_image, current.blocks[reference_index], SEEK_SET);
                 fread(&sub_dir, sizeof(struct iNode), 1, drive_image);
-                printf("%s %d\n", sub_dir.filename, sub_dir.type);
+                printf("%s\n", sub_dir.filename);
             }
         }
 
