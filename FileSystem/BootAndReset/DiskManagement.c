@@ -40,11 +40,14 @@ struct Drive *createDrive(char filename[256], int size, int block_size, int inod
     drive->root.created_datetime = raw_time;
     drive->root.size = 0;
     drive->root.continuation_iNode = 0;
+    drive->root.iNode_parent = 0;
 
     memcpy(drive->superblock.filename, filename, 256);
     memcpy(drive->root.filename, "root", 256);
     memcpy(drive->root.owner, username, 32);
-    memset(drive->root.blocks, 0, 15);
+    for(int i = 0; i < 15; i++){
+        drive->root.blocks[i] = 0;
+    }
 
     struct iNode empty = {.type = EMPTY};
 
@@ -77,7 +80,7 @@ int checkIntegrity(char filename[256]) {
         fread(&drive, sizeof(struct Drive), 1, fp);
         fclose(fp);
 
-        printf("Volume name: %s\n", filename);
+        printf("Volume name: %s\n", drive.superblock.filename);
         printf("Size: %ld bytes\n", drive.superblock.size);
         printf("iNode count: %d\n", drive.superblock.inode_count);
         printf("Block count: %d\n", drive.superblock.block_count);

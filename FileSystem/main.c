@@ -12,6 +12,7 @@ int main() {
     set_working_drive(drive);
     set_current_user("jassonrm");
     struct FileDescriptor *fd = open_file("/prueba.exe");
+    list_directories();
 //    write_file(fd, "Hola mundo!", 12);
     return 0;
 }

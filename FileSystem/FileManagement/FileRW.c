@@ -18,7 +18,7 @@ int set_working_drive(struct Drive *drive) {
     working_drive = drive;
     cur_working_dir = &(drive->root);
     cwd_index = working_drive->superblock.first_inode;
-    drive_image = fopen(drive->superblock.filename, "rb");
+    drive_image = fopen(drive->superblock.filename, "r+");
     if (drive_image == NULL){
         printf("Error: Can't open drive.");
         return 1;
@@ -86,6 +86,7 @@ struct FileDescriptor *open_file(char *filename) {
                 return NULL;
             } else {
                 // Create file
+                next_dir = malloc(sizeof(struct iNode));
                 memcpy(next_dir->filename, cur_filename, 256);
                 next_dir->type = FILE_START;
                 memcpy(next_dir->owner, user, 32);
@@ -96,21 +97,23 @@ struct FileDescriptor *open_file(char *filename) {
                 next_dir->size = 0;
                 next_dir->iNode_parent = cur_inode_index;
                 next_dir->continuation_iNode = 0;
-                memset(next_dir->blocks, 0, 15);
+                for(int i = 0; i < 15; i++){
+                    next_dir->blocks[i] = 0;
+                }
 
                 // Search for empty inode for file and write
                 int inode_index = working_drive->superblock.first_inode;
                 fseek(drive_image, inode_index, SEEK_SET);
-
                 struct iNode temp;
                 int found_inode = 0;
 
                 for (int inode_counter = 0; inode_counter < working_drive->superblock.inode_count; inode_counter++) {
                     fseek(drive_image, sizeof(struct iNode), SEEK_CUR);
                     inode_index += sizeof(struct iNode);
-                    fread(&temp, sizeof(struct iNode), 1, drive_image);
 
+                    fread(&temp, sizeof(struct iNode), 1, drive_image);
                     if (temp.type == EMPTY){
+                        fseek(drive_image, inode_index, SEEK_SET);
                         fwrite(next_dir, sizeof(struct iNode), 1, drive_image);
                         found_inode = 1;
                         break;
@@ -161,22 +164,25 @@ struct FileDescriptor *open_file(char *filename) {
                                     current_dir->continuation_iNode = 0;
                                     current_dir->iNode_parent = cur_inode_index;
                                     current_dir->blocks[0] = inode_index;
-                                    memset(current_dir->blocks, 0, 15);
+                                    for(int i = 1; i < 15; i++){
+                                        next_dir->blocks[i] = 0;
+                                    }
 
                                     fseek(drive_image, continuation_index, SEEK_SET);
                                     fwrite(current_dir, sizeof(struct iNode), 1, drive_image);
-                                    found_inode = 1;
+                                    found_reference = 1;
                                     break;
                                 }
                             }
-
-                            if(!found_inode){
+                            if(!found_reference){
                                 printf("Error: No inodes available.");
                                 return NULL;
                             }
                         }
                     }
                 }
+                // Exit main loop
+                break;
             }
         }
     }
@@ -193,3 +199,27 @@ struct FileDescriptor *open_file(char *filename) {
 int write_file(struct FileDescriptor *fileDescriptor, char *data, int size) {
     return -1;
 };
+
+int list_directories(){
+    printf("-------------------\n");
+    printf("Current directory: %s\n", cur_working_dir->filename);
+
+    struct iNode current = *cur_working_dir;
+    struct iNode sub_dir;
+    while (1){
+        for(int reference_index = 0; reference_index < 15; reference_index++){
+            if(current.blocks[reference_index] != 0){
+                fseek(drive_image, current.blocks[reference_index], SEEK_SET);
+                fread(&sub_dir, sizeof(struct iNode), 1, drive_image);
+                printf("%s\n", sub_dir.filename);
+            }
+        }
+
+        if(current.continuation_iNode){
+            fseek(drive_image, current.continuation_iNode, SEEK_SET);
+            fread(&current, sizeof(struct iNode), 1, drive_image);
+        }else{
+            return 0;
+        }
+    }
+}
