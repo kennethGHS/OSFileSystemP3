@@ -15,7 +15,7 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/BootAndReset/DiskManagement.c" beforeDir="false" afterPath="$PROJECT_DIR$/BootAndReset/DiskManagement.c" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/FileManagement/FileRW.c" beforeDir="false" afterPath="$PROJECT_DIR$/FileManagement/FileRW.c" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/FileManagement/FileRW.h" beforeDir="false" afterPath="$PROJECT_DIR$/FileManagement/FileRW.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/FileManagement/Inode.h" beforeDir="false" afterPath="$PROJECT_DIR$/FileManagement/Inode.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.c" beforeDir="false" afterPath="$PROJECT_DIR$/main.c" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -72,11 +72,38 @@
       <option name="presentableId" value="Default" />
       <updated>1607270810489</updated>
       <workItem from="1607270812896" duration="21601000" />
-      <workItem from="1607390033681" duration="4509000" />
+      <workItem from="1607390033681" duration="13888000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/FileManagement/FileRW.c</url>
+          <line>82</line>
+          <option name="timeStamp" value="20" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/FileManagement/FileRW.c</url>
+          <line>178</line>
+          <option name="timeStamp" value="36" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/FileManagement/FileRW.c</url>
+          <line>145</line>
+          <option name="timeStamp" value="39" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+    <watches-manager>
+      <configuration name="CMakeRunConfiguration">
+        <watch expression="current_dir-&gt;blocks" />
+        <watch expression="current_dir-&gt;blocks" />
+      </configuration>
+    </watches-manager>
   </component>
 </project>

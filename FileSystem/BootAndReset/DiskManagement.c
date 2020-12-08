@@ -33,7 +33,7 @@ struct Drive *createDrive(char filename[256], int size, int block_size, int inod
     drive->superblock.first_block = first_block;
     drive->superblock.block_size = block_size;
     drive->superblock.inode_size = sizeof(struct iNode);
-    drive->superblock.first_inode = sizeof(struct Superblock);
+    drive->superblock.first_inode = sizeof(struct Drive) - sizeof(struct iNode);
 
     drive->root.type = DIRECTORY_START;
     drive->root.modified_datetime = raw_time;

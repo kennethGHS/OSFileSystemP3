@@ -21,10 +21,10 @@ struct iNode {
     char owner[32];
     time_t modified_datetime;
     time_t created_datetime;
-    int size;
-    int continuation_iNode;
-    int iNode_parent;
-    int blocks[15];
+    unsigned long size;
+    unsigned long continuation_iNode;
+    unsigned long iNode_parent;
+    unsigned long blocks[15];
 };
 
 #endif //FILESYSTEM_INODESTRUCT_H
