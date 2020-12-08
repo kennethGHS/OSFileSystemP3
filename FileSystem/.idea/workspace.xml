@@ -14,6 +14,7 @@
     <list default="true" id="362c5566-3c69-4bd8-ab40-bc7c6d66dbdc" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/FileManagement/FileRW.c" beforeDir="false" afterPath="$PROJECT_DIR$/FileManagement/FileRW.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/FileManagement/FileRW.h" beforeDir="false" afterPath="$PROJECT_DIR$/FileManagement/FileRW.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.c" beforeDir="false" afterPath="$PROJECT_DIR$/main.c" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -66,7 +67,7 @@
       <updated>1607270810489</updated>
       <workItem from="1607270812896" duration="21601000" />
       <workItem from="1607390033681" duration="13963000" />
-      <workItem from="1607438385475" duration="5988000" />
+      <workItem from="1607438385475" duration="8158000" />
     </task>
     <servers />
   </component>
@@ -74,15 +75,6 @@
     <option name="version" value="3" />
   </component>
   <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/FileManagement/FileRW.c</url>
-          <line>234</line>
-          <option name="timeStamp" value="71" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
     <watches-manager>
       <configuration name="CMakeRunConfiguration">
         <watch expression="current_dir-&gt;iNode_parent" />
