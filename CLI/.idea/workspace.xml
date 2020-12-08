@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="BranchesTreeState">
+    <expand>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="GROUP_NODE:origin" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+    </expand>
+    <select />
+  </component>
+  <component name="CMakeRunConfigurationManager" shouldGenerate="true" shouldDeleteObsolete="true">
+    <generated>
+      <config projectName="CLI" targetName="CLI" />
+      <config projectName="CLI" targetName="CLI_autogen" />
+    </generated>
+  </component>
+  <component name="CMakeSettings">
+    <configurations>
+      <configuration PROFILE_NAME="Debug" CONFIG_NAME="Debug" />
+    </configurations>
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="5aad5a74-e94f-4423-9fbf-b0e330ad7210" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/main.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mainwindow.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mainwindow.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mainwindow.ui" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../FileSystem/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../FileSystem/.idea/workspace.xml" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Debug" />
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="ProjectId" id="1lNnyWd39hux3lIgaoNn3IGhhuX" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="cf.first.check.clang-format" value="false" />
+    <property name="nodejs_package_manager_path" value="npm" />
+  </component>
+  <component name="RunManager" selected="CMake Application.CLI">
+    <configuration default="true" type="CLionExternalRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" PASS_PARENT_ENVS_2="true">
+      <method v="2">
+        <option name="CLION.EXTERNAL.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="CLI" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="CLI" TARGET_NAME="CLI" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="CLI" RUN_TARGET_NAME="CLI">
+      <envs>
+        <env name="CMAKE_PREFIX_PATH" value="usr/lib/x86_64-linux-gnu/cmake/Qt5/" />
+      </envs>
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="CLI_autogen" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="CLI" TARGET_NAME="CLI_autogen" CONFIG_NAME="Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="GradleAppRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" PASS_PARENT_ENVS_2="true">
+      <method v="2">
+        <option name="com.jetbrains.cidr.cpp.gradle.execution.GradleNativeBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <list>
+      <item itemvalue="CMake Application.CLI" />
+      <item itemvalue="CMake Application.CLI_autogen" />
+    </list>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="5aad5a74-e94f-4423-9fbf-b0e330ad7210" name="Default Changelist" comment="" />
+      <created>1607446670493</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1607446670493</updated>
+      <workItem from="1607446671802" duration="2833000" />
+      <workItem from="1607452095570" duration="108000" />
+      <workItem from="1607460488224" duration="167000" />
+      <workItem from="1607460782218" duration="4034000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="oldMeFiltersMigrated" value="true" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="454" y="211" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1607460841679">
+      <screen x="72" y="27" width="1848" height="1053" />
+    </state>
+    <state x="454" y="211" key="#com.intellij.execution.impl.EditConfigurationsDialog/72.27.1848.1053@72.27.1848.1053" timestamp="1607460841679" />
+    <state x="836" y="295" width="309" height="523" key="EnvironmentVariablesDialog" timestamp="1607460819163">
+      <screen x="72" y="27" width="1848" height="1053" />
+    </state>
+    <state x="836" y="295" width="309" height="523" key="EnvironmentVariablesDialog/72.27.1848.1053@72.27.1848.1053" timestamp="1607460819163" />
+    <state width="1802" height="323" key="GridCell.Tab.0.bottom" timestamp="1607464942735">
+      <screen x="72" y="27" width="1848" height="1053" />
+    </state>
+    <state width="1802" height="323" key="GridCell.Tab.0.bottom/72.27.1848.1053@72.27.1848.1053" timestamp="1607464942735" />
+    <state width="1802" height="323" key="GridCell.Tab.0.center" timestamp="1607464942734">
+      <screen x="72" y="27" width="1848" height="1053" />
+    </state>
+    <state width="1802" height="323" key="GridCell.Tab.0.center/72.27.1848.1053@72.27.1848.1053" timestamp="1607464942734" />
+    <state width="1802" height="323" key="GridCell.Tab.0.left" timestamp="1607464942734">
+      <screen x="72" y="27" width="1848" height="1053" />
+    </state>
+    <state width="1802" height="323" key="GridCell.Tab.0.left/72.27.1848.1053@72.27.1848.1053" timestamp="1607464942734" />
+    <state width="1802" height="323" key="GridCell.Tab.0.right" timestamp="1607464942734">
+      <screen x="72" y="27" width="1848" height="1053" />
+    </state>
+    <state width="1802" height="323" key="GridCell.Tab.0.right/72.27.1848.1053@72.27.1848.1053" timestamp="1607464942734" />
+    <state width="1802" height="188" key="GridCell.Tab.1.bottom" timestamp="1607464940854">
+      <screen x="72" y="27" width="1848" height="1053" />
+    </state>
+    <state width="1802" height="188" key="GridCell.Tab.1.bottom/72.27.1848.1053@72.27.1848.1053" timestamp="1607464940854" />
+    <state width="1802" height="188" key="GridCell.Tab.1.center" timestamp="1607464940854">
+      <screen x="72" y="27" width="1848" height="1053" />
+    </state>
+    <state width="1802" height="188" key="GridCell.Tab.1.center/72.27.1848.1053@72.27.1848.1053" timestamp="1607464940854" />
+    <state width="1802" height="188" key="GridCell.Tab.1.left" timestamp="1607464940854">
+      <screen x="72" y="27" width="1848" height="1053" />
+    </state>
+    <state width="1802" height="188" key="GridCell.Tab.1.left/72.27.1848.1053@72.27.1848.1053" timestamp="1607464940854" />
+    <state width="1802" height="188" key="GridCell.Tab.1.right" timestamp="1607464940854">
+      <screen x="72" y="27" width="1848" height="1053" />
+    </state>
+    <state width="1802" height="188" key="GridCell.Tab.1.right/72.27.1848.1053@72.27.1848.1053" timestamp="1607464940854" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/qconsole.cpp</url>
+          <line>547</line>
+          <option name="timeStamp" value="3" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>
