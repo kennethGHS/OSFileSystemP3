@@ -191,6 +191,7 @@ void QConsole::reset(const QString &welcomeText) {
 
     append(welcomeText);
     append("");
+    setHome(false);
 
     //init attributes
     historyIndex = 0;
@@ -292,10 +293,8 @@ void QConsole::handleTabKeyPress() {
 
 // If return pressed, do the evaluation and append the result
 void QConsole::handleReturnKeyPress() {
-    printf("%s\n", "Enter");
     //Get the command to validate
     QString command = getCurrentCommand();
-    printf("%s\n", command.toStdString().c_str());
     //execute the command and get back its text result and its return value
     if (isCommandComplete(command))
         pExecCommand(command);
@@ -546,7 +545,7 @@ void QConsole::pExecCommand(const QString &command) {
     isLocked = true;
 
     addCommandToHistory(command);
-    printCommandExecutionResults(command, ResultType::Error);
+    printCommandExecutionResults(command, ResultType::Complete);
     emit execCommand(command);
 }
 
@@ -562,7 +561,7 @@ void QConsole::printCommandExecutionResults(const QString &result, ResultType ty
     //Display the prompt again
     if (type == ResultType::Complete || type == ResultType::Error) {
         if (!result.endsWith("\n"))
-            append("\n");
+            append("");
 
         isLocked = false;
         displayPrompt();
