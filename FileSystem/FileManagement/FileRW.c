@@ -33,17 +33,13 @@ struct iNode *open_inode(char *filename, enum type_t type) {
     // Select current directory to search from
     struct iNode *current_dir = malloc(sizeof(struct iNode));
     unsigned long cur_inode_index;
-    int using_root;
     if (filename[0] == '/') {
-        memcpy(current_dir, &(working_drive->root), sizeof(struct iNode));
         cur_inode_index = working_drive->superblock.first_inode;
-        using_root = 1;
     } else {
-        fseek(drive_image, cwd_index, SEEK_SET);
-        fread(current_dir, sizeof(struct iNode), 1, drive_image);
         cur_inode_index = cwd_index;
-        using_root = 0;
     }
+    fseek(drive_image, cur_inode_index, SEEK_SET);
+    fread(current_dir, sizeof(struct iNode), 1, drive_image);
 
     // Split path
     char *cur_filename = strtok(filename, "/");
@@ -85,6 +81,7 @@ struct iNode *open_inode(char *filename, enum type_t type) {
             } else {
                 // Create file
                 had_to_be_created = 1;
+                next_dir = malloc(sizeof(struct iNode));
                 memcpy(next_dir->filename, cur_filename, 256);
                 next_dir->type = type;
                 memcpy(next_dir->owner, user, 32);
@@ -192,11 +189,6 @@ struct iNode *open_inode(char *filename, enum type_t type) {
         printf("Error: directory already exists with that name.\n");
         return NULL;
     } else {
-        // Update root in memory if neccesary
-        if (using_root) {
-            fseek(drive_image, working_drive->superblock.first_inode, SEEK_SET);
-            fread(&(working_drive->root), sizeof(struct iNode), 1, drive_image);
-        }
         return next_dir;
     }
 };
