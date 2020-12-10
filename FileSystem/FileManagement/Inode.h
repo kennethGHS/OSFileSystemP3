@@ -16,6 +16,7 @@ enum type_t {
 };
 
 struct iNode {
+    unsigned long index;
     char filename[256];
     enum type_t type;
     char owner[32];

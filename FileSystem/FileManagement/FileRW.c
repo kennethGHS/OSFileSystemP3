@@ -7,6 +7,7 @@
 #include "Inode.h"
 #include "../BootAndReset/Drive.h"
 #include "FileDescriptor.h"
+#include "Block.h"
 
 struct Drive *working_drive;
 unsigned long cwd_index;
@@ -28,6 +29,7 @@ int set_current_user(char username[32]) {
     memcpy(user, username, 32);
     return 0;
 }
+
 // TODO check that all intermediate inodes are directories
 struct iNode *open_inode(char *filename, enum type_t type) {
     // Select current directory to search from
@@ -107,6 +109,7 @@ struct iNode *open_inode(char *filename, enum type_t type) {
                     fread(&temp, sizeof(struct iNode), 1, drive_image);
 
                     if (temp.type == EMPTY) {
+                        next_dir->index = inode_index;
                         fseek(drive_image, inode_index, SEEK_SET);
                         fwrite(next_dir, sizeof(struct iNode), 1, drive_image);
                         found_inode = 1;
@@ -212,8 +215,9 @@ int create_dir(char *filename) {
         return 1;
     }
 }
+
 // TODO check that all intermediate inodes are directories
-int change_directory(char *filename){
+int change_directory(char *filename) {
     // Select current directory to search from
     struct iNode *current_dir = malloc(sizeof(struct iNode));
     unsigned long cur_inode_index;
@@ -283,7 +287,138 @@ int change_directory(char *filename){
 };
 
 int write_file(struct FileDescriptor *fileDescriptor, char *data, int size) {
-    return -1;
+    struct iNode *inode = fileDescriptor->inode;
+    struct Block *block = malloc(working_drive->superblock.block_size);
+    int block_index = working_drive->superblock.first_block;
+    int pointer_index = fileDescriptor->cursor / (working_drive->superblock.block_size - 1);
+    int offset = fileDescriptor->cursor % (working_drive->superblock.block_size - 1);
+    int pointer;
+    int scanned_for_contiguous_space = 0;
+
+    while (size > 0) {
+        if (pointer_index < 15) {
+            pointer = inode->blocks[pointer_index];
+            if (pointer != 0) {
+                // If block is assigned
+                fseek(drive_image, pointer, SEEK_SET);
+                fread(block, sizeof(struct Block), 1, drive_image);
+
+            } else {
+                // Else assign block
+                int found_contiguous_space = 0;
+                if (!scanned_for_contiguous_space) {
+                    // Search for contiguous space
+                    int blocks_needed = (offset + size) / (working_drive->superblock.block_size - 1);
+                    int current_index = block_index;
+                    int contiguous_blocks = 0;
+                    struct Block current_block;
+
+                    for (int new_index = 0; new_index < working_drive->superblock.block_count; new_index++) {
+                        fseek(drive_image, current_index, SEEK_SET);
+                        fread(&current_block, sizeof(struct Block), 1, drive_image);
+                        current_index += sizeof(struct Block);
+
+                        if (current_block.state == EMPTY) {
+                            contiguous_blocks += 1;
+                            if (contiguous_blocks == blocks_needed) {
+                                found_contiguous_space = 1;
+                                break;
+                            }
+                        } else {
+                            block_index = current_index;
+                            contiguous_blocks = 0;
+                        }
+                    }
+                }
+
+                if(!found_contiguous_space && !scanned_for_contiguous_space){
+                    // Start from the beginning
+                    block_index = working_drive->superblock.first_block;
+                }
+
+                scanned_for_contiguous_space = 1;
+
+                while (block_index < working_drive->superblock.block_count) {
+                    fseek(drive_image, block_index, SEEK_SET);
+                    fread(block, sizeof(struct Block), 1, drive_image);
+
+                    if (block->state == EMPTY) {
+                        break;
+                    } else {
+                        block_index += sizeof(struct Block);
+                    }
+                }
+
+                inode->blocks[pointer_index] = block_index;
+                fseek(drive_image, inode->index, SEEK_SET);
+                fwrite(inode, sizeof(struct iNode), 1, drive_image);
+            }
+
+            // Write to block
+            block->state = USED;
+            int amount_written = working_drive->superblock.block_size - 1 - offset;
+            memcpy(block->information, data, amount_written);
+            size -= amount_written;
+            pointer_index += 1;
+            offset = 0;
+
+            fseek(drive_image, block_index, SEEK_SET);
+            fwrite(block, sizeof(struct Block), 1, drive_image);
+
+            block_index += sizeof(struct Block);
+
+        } else {
+            // Check continuation inode
+            int found_inode = 0;
+            if (inode->continuation_iNode != 0) {
+                fseek(drive_image, inode->continuation_iNode, SEEK_SET);
+                fread(inode, sizeof(struct iNode), 1, drive_image);
+            } else {
+                // Search for empty inode for continuation
+                unsigned long continuation_index = working_drive->superblock.first_inode;
+                struct iNode temp;
+                for (int inode_counter = 0;
+                     inode_counter < working_drive->superblock.inode_count; inode_counter++) {
+                    continuation_index += sizeof(struct iNode);
+                    fseek(drive_image, continuation_index, SEEK_SET);
+                    fread(&temp, sizeof(struct iNode), 1, drive_image);
+
+                    if (temp.type == EMPTY) {
+                        inode->continuation_iNode = continuation_index;
+                        fseek(drive_image, inode->index, SEEK_SET);
+                        fwrite(inode, sizeof(struct iNode), 1, drive_image);
+
+                        struct iNode *extension = malloc(sizeof(struct iNode));
+                        memcpy(extension, inode, sizeof(struct iNode));
+                        extension->type = DIRECTORY_EXTENSION;
+                        time_t raw_time;
+                        time(&raw_time);
+                        extension->modified_datetime = raw_time;
+                        extension->created_datetime = raw_time;
+                        extension->size = 0;
+                        extension->continuation_iNode = 0;
+                        extension->iNode_parent = inode->index;
+                        for (int i = 0; i < 15; i++) {
+                            extension->blocks[i] = 0;
+                        }
+
+                        fseek(drive_image, continuation_index, SEEK_SET);
+                        fwrite(extension, sizeof(struct iNode), 1, drive_image);
+                        found_inode = 1;
+                        inode = extension;
+                        break;
+                    }
+                }
+                if (!found_inode) {
+                    printf("Error: No inodes available.");
+                    return NULL;
+                }
+            }
+            pointer_index -= 15;
+        }
+    }
+
+    return 0;
 };
 
 int list_directories() {

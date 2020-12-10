@@ -7,7 +7,7 @@
 
 int main() {
     // Create drive and print info
-    struct Drive *drive = createDrive("drive.vsfs", 104857600, 4096, 1000, "jassonrm");
+    struct Drive *drive = createDrive("drive.vsfs", 104857600, 64, 1000, "jassonrm");
     checkIntegrity("drive.vsfs");
 
     // Setup drive
@@ -22,7 +22,7 @@ int main() {
         itoa(i, number, 10);
         strcpy(name, number);
         strcat(name, "-file");
-        fd = open_file(name);
+        open_file(name);
         strcpy(name, number);
         strcat(name, "-dir");
         create_dir(name);
@@ -33,8 +33,10 @@ int main() {
     create_dir("prueba1");
     create_dir("prueba2");
     open_file("prueba3");
-    open_file("prueba4");
+    fd = open_file("prueba4");
     list_directories();
-//    write_file(fd, "Hola mundo!", 12);
+    write_file(fd, "Hola mundo! Esto es una prueba muy larga y necesito saber que tanto funciona la funcion de write file asi que estoy haciendo esto bien largo.", 142);
+    list_directories();
+
     return 0;
 }

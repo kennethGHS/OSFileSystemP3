@@ -19,6 +19,7 @@
 #include <QScrollBar>
 #include <QDesktopWidget>
 #include <regex>
+#include <QKeySequence>
 
 //#define USE_POPUP_COMPLETER
 #define WRITE_ONLY QIODevice::WriteOnly
@@ -207,7 +208,7 @@ QConsole::QConsole(QWidget *parent, const QString &welcomeText)
           promptLength(0), promptParagraph(0), isLocked(false) {
     // Disable accepting rich text from user
     setAcceptRichText(false);
-
+    editing = false;
     //Disable undo/redo
     setUndoRedoEnabled(false);
 
@@ -226,8 +227,20 @@ QConsole::QConsole(QWidget *parent, const QString &welcomeText)
 }
 
 void QConsole::initCommands() {
-    commands.append("su -l .+");        // su -l [username]
-    commands.append("su");              // su
+    commands.append("su -l .+|su *");                           // su -l [username] | su
+    commands.append("ls .+|ls *");                              // ls [path] | ls
+    commands.append("cd .+|cd *");                              // cd [path] | cd
+    commands.append("touch .+");                                // touch [filename]
+    commands.append(
+            "cat [^>+]*|cat .*>{1,2}(.|\n)*");    // cat [filename] | cat [filename] > [content] | cat [filename] >> [content]
+    commands.append("echo +'[^']+' +> .+");                     // echo [content] > [filename]
+    commands.append("printf +'.+' +.+");                        // printf [content] > [filename]
+    commands.append("rm .+");                                   // rm [filename]
+    commands.append("mkdir .+");                                // mkdir [dirname]
+    commands.append("rmdir .+");                                // rmdir [dirname]
+    commands.append("rm -r .+");                                // rm -r [dirname]
+    commands.append("clear *");                                 // clear
+    commands.append("help *");                                  // help
 }
 
 //Sets the prompt and cache the prompt length to optimize the processing speed
@@ -310,9 +323,15 @@ void QConsole::handleReturnKeyPress() {
     //execute the command and get back its text result and its return value
     if (isCommandComplete(command))
         pExecCommand(command);
-    else {
+    else if (multiline && command.isEmpty()) {
+        multilineCommand = multilineCommand.remove(QRegExp("\\\\\n"));
+        pExecCommand(multilineCommand);
+        multiline = false;
+    } else {
         append("");
-//        moveCursor(QTextCursor::EndOfLine);
+        multilineCommand.append(command);
+        multilineCommand.append("\n");
+        moveCursor(QTextCursor::EndOfLine);
     }
 }
 
@@ -413,6 +432,14 @@ void QConsole::keyPressEvent(QKeyEvent *e) {
             return;
         }
 
+    } else if ((e->modifiers() & Qt::ControlModifier) && (e->key() == Qt::Key_D)) {
+        if (isSelectionInEditionZone()) {
+            editing = false;
+            pExecCommand(multilineCommand);
+            multilineCommand.clear();
+            return;
+        }
+
     } else {
         switch (e->key()) {
             case Qt::Key_Tab:
@@ -477,7 +504,9 @@ void QConsole::keyPressEvent(QKeyEvent *e) {
 QString QConsole::getCurrentCommand() {
     QTextCursor cursor = textCursor();    //Get the current command: we just remove the prompt
     cursor.movePosition(QTextCursor::StartOfBlock);
-    cursor.movePosition(QTextCursor::Right, QTextCursor::MoveAnchor, promptLength);
+    if (!editing and !multiline) {
+        cursor.movePosition(QTextCursor::Right, QTextCursor::MoveAnchor, promptLength);
+    }
     cursor.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
     QString command = cursor.selectedText();
     cursor.clearSelection();
@@ -495,7 +524,13 @@ void QConsole::replaceCurrentCommand(const QString &newCommand) {
 
 //default implementation: command always complete
 bool QConsole::isCommandComplete(const QString &command) {
-    return true;
+    if (std::regex_match(command.toStdString().c_str(), std::regex("cat .*>{1,2}.*"))) {
+        editing = true;
+    } else if (std::regex_match(command.toStdString().c_str(), std::regex(".* \\\\"))) {
+        multiline = true;
+    }
+    return !editing;
+
 }
 
 //Tests whether the cursor is in th edition zone or not (after the prompt
@@ -575,7 +610,6 @@ void QConsole::printCommandExecutionResults(const QString &result, ResultType ty
         setTextColor(outColor_);
 
     append(result);
-
     //Display the prompt again
     if (type == ResultType::Complete || type == ResultType::Error) {
         if (!result.endsWith("\n"))
