@@ -1,4 +1,5 @@
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QImage, QIcon
 from PyQt5.QtWidgets import QLabel, QVBoxLayout, QWidget, QScrollArea, QMainWindow, QStackedLayout, QHBoxLayout, \
     QPushButton
 
@@ -16,7 +17,15 @@ class MainWindow(QMainWindow):
         self.directory_text = DirText(self)
         self.hbox = QHBoxLayout()
         self.back_button = QPushButton()
-        self.back_button.clicked.connect(lambda : self.execute_prev_string())
+        self.back_button.clicked.connect(lambda: self.execute_prev_string())
+        self.back_button.setStyleSheet("background-color: lightblue;")
+        box_layout = QHBoxLayout()
+        box_layout.addWidget(self.back_button)
+        box_layout.addWidget(self.directory_text)
+
+
+        self.back_button.setIcon(QIcon("arrow.png"))
+        self.vbox.addLayout(box_layout)
         self.setStyleSheet("background-color: white;")
         self.current_dir = "/"
         self.directory_list = ["/"]
@@ -27,7 +36,7 @@ class MainWindow(QMainWindow):
         self.widget.setLayout(self.vbox)
         # Scroll Area Properties
         self.scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-        self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        # self.scroll.setHorizontalScrollBarPolicy()
         self.scroll.setWidgetResizable(True)
         self.scroll.setWidget(self.widget)
         self.setCentralWidget(self.scroll)
@@ -52,19 +61,28 @@ class MainWindow(QMainWindow):
         self.vbox.addLayout(item)
         self.vbox.setAlignment(Qt.AlignTop)
 
-    def mousePressEvent(self, QMouseEvent):
-        self.resetQbox()
+    # def mousePressEvent(self, QMouseEvent):
+    #     self.resetQbox()
 
     def mouseDoubleClickEvent(self, QMouseEvent):
         print("xd doubble baby")
 
     def check_file_and_set(self, path):
+        if path == "":
+            self.directory_text.setText(self.current_dir)
+        if path[0] == "/" and len(path) == 1:
+            self.set_directory_interface(self.root, ["/"])
+
         string_list = path.split("/")[1:]
         if self.root is not None:
+            if path == "/":
+                self.set_directory_interface(self.root, ["/"])
+                return
             folder = self.check_directory(self.root.file_inside, string_list)
-            #ocupo añadir cosas aqui
+            # ocupo añadir cosas aqui
+            if folder == 1 or folder == 2:
+                return
             self.set_directory_interface(folder, string_list)
-            self.directory_list.append(path)
 
     def check_directory(self, file_list, list_strings):
         file_to_return = None
@@ -89,17 +107,46 @@ class MainWindow(QMainWindow):
 
     def set_directory_interface(self, file, string_list):
         self.resetQbox()
+        i = 0
+        box_layout = QHBoxLayout()
+
         for file in file.file_inside:
-            file.reset_labels()
-            box_layout = QHBoxLayout()
+
+            if i % 5 == 0:
+                box_layout = QHBoxLayout()
+                box_layout.setAlignment(Qt.AlignLeft)
+                self.addToVbox(box_layout)
+            i += 1
+            file.reset_labels(self)
             box_layout.addWidget(file.label)
             box_layout.addWidget(file.label_data)
-            self.addToVbox(box_layout)
+        # if i%2==0:
+        #     print("Entre")
+        #     var =QLabel()
+        #     var2 =QLabel()
+        #     box_layout.addWidget(var)
+        #     box_layout.addWidget(var2)
+
         string_text = "/"
         for string in string_list:
             string_text += string + "/"
+        if string_text == "///":
+            self.directory_list.append(self.current_dir)
+            self.current_dir = "/"
+            self.directory_text.setText("/")
+            return
+
+        self.directory_list.append(self.current_dir)
+        self.current_dir = string_text[:len(string_text) - 1]
         self.directory_text.setText(string_text)
 
     def execute_prev_string(self):
-        pass
-
+        self.check_file_and_set(self.directory_list[len(self.directory_list) - 1])
+        print("Aqui")
+        if len(self.directory_list) == 2:
+            self.directory_list.pop(len(self.directory_list) - 1)
+            return
+        if len(self.directory_list) != 1:
+            self.directory_list.pop(len(self.directory_list) - 1)
+            self.directory_list.pop(len(self.directory_list) - 1)
+            return

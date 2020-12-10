@@ -23,6 +23,8 @@ if __name__ == '__main__':
     app = QApplication([])
     app2 = MainWindow("xd")
     file = parse_json_file("txt.json")
+    app2.root = file
+    app2.set_directory_interface(app2.root,["/"])
     file.print_attributes()
     # test = QHBoxLayout()
     # var = QLabel("lol")
