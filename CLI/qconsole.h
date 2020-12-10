@@ -211,6 +211,8 @@ protected:
     int promptParagraph;
 
     QStringList commands;
+    bool editing, multiline;
+    QString multilineCommand;
 
 protected:
     //Implement paste with middle mouse button
