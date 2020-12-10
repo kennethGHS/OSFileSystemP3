@@ -6,14 +6,21 @@
 MainWindow::MainWindow(QWidget *parent)
         : QMainWindow(parent), ui(new Ui::MainWindow) {
     this->ui->setupUi(this);
-    QConsole *console = new QConsole(nullptr, "TEST");
+    this->setWindowTitle("File System");
+    QConsole *console = new QConsole();
     this->setCentralWidget(console);
     layout()->setAlignment(console, Qt::AlignmentFlag::AlignCenter);
-    console->setCmdColor(QColor(0, 0, 0));
-    console->setOutColor(QColor(100, 200, 30));
-    console->setPrompt(">> ", true);
-
-
+    this->ui->statusbar->hide();
+    console->setBackgroundColor(QColor(43, 43, 43));
+    console->setErrColor(QColor(255, 85, 85));
+    console->setCmdColor(QColor(169, 183, 198));
+    console->setOutColor(QColor(80, 250, 123));
+    console->setPathColor(QColor(98, 114, 164));
+    console->setUserColor(QColor(97, 150, 71));
+    console->setUsername("root");
+    console->setPrompt("/", true);
+    QFont font = QFont("monospace", 12);
+    console->setFont(font);
 }
 
 MainWindow::~MainWindow() {

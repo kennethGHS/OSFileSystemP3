@@ -18,6 +18,7 @@
 #include <QApplication>
 #include <QScrollBar>
 #include <QDesktopWidget>
+#include <regex>
 
 //#define USE_POPUP_COMPLETER
 #define WRITE_ONLY QIODevice::WriteOnly
@@ -221,12 +222,18 @@ QConsole::QConsole(QWidget *parent, const QString &welcomeText)
     reset(welcomeText);
     const int tabwidth = QFontMetrics(currentFont()).width('a') * 4;
     setTabStopWidth(tabwidth);
+    initCommands();
+}
+
+void QConsole::initCommands() {
+    commands.append("su -l .+");        // su -l [username]
+    commands.append("su");              // su
 }
 
 //Sets the prompt and cache the prompt length to optimize the processing speed
 void QConsole::setPrompt(const QString &newPrompt, bool display) {
     prompt = newPrompt;
-    promptLength = prompt.length();
+    promptLength = prompt.length() + username.length() + 2;
     //display the new prompt
     if (display)
         displayPrompt();
@@ -238,14 +245,19 @@ void QConsole::displayPrompt() {
     //Prevent previous text displayed to be undone
     setUndoRedoEnabled(false);
     //displays the prompt
-    setTextColor(cmdColor_);
     QTextCursor cur = textCursor();
-    cur.insertText(prompt);
+    setTextColor(userColor_);
+    insertPlainText(username);
+    setTextColor(cmdColor_);
+    insertPlainText(":");
+    setTextColor(pathColor_);
+    insertPlainText(prompt);
+    setTextColor(cmdColor_);
+    insertPlainText("$");
     cur.movePosition(QTextCursor::EndOfLine);
     setTextCursor(cur);
     //Saves the paragraph number of the prompt
     promptParagraph = cur.blockNumber();
-
     //Enable undo/redo for the actual command
     setUndoRedoEnabled(true);
 }
@@ -300,7 +312,7 @@ void QConsole::handleReturnKeyPress() {
         pExecCommand(command);
     else {
         append("");
-        moveCursor(QTextCursor::EndOfLine);
+//        moveCursor(QTextCursor::EndOfLine);
     }
 }
 
@@ -482,7 +494,7 @@ void QConsole::replaceCurrentCommand(const QString &newCommand) {
 }
 
 //default implementation: command always complete
-bool QConsole::isCommandComplete(const QString &) {
+bool QConsole::isCommandComplete(const QString &command) {
     return true;
 }
 
@@ -543,9 +555,15 @@ QString QConsole::addCommandToHistory(const QString &command) {
 //pExecCommand(QString) executes the command and displays back its result
 void QConsole::pExecCommand(const QString &command) {
     isLocked = true;
-
+    ResultType result = ResultType::Error;
+    for (QString format: commands) {
+        if (std::regex_match(command.toStdString().c_str(), std::regex(format.toStdString().c_str()))) {
+            result = ResultType::Complete;
+            break;
+        }
+    }
     addCommandToHistory(command);
-    printCommandExecutionResults(command, ResultType::Complete);
+    printCommandExecutionResults(command, result);
     emit execCommand(command);
 }
 
