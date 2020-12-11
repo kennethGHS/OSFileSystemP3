@@ -22,6 +22,8 @@ int change_directory(char *filename);
 
 int write_file(struct FileDescriptor *fileDescriptor, char *data, int size);
 
+char *read_file(struct FileDescriptor *fileDescriptor);
+
 int list_directories();
 //int getFreeBlock();
 //int getRootInfo();

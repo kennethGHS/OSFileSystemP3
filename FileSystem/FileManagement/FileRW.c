@@ -289,9 +289,9 @@ int change_directory(char *filename) {
 int write_file(struct FileDescriptor *fileDescriptor, char *data, int size) {
     struct iNode *inode = fileDescriptor->inode;
     struct Block *block = malloc(working_drive->superblock.block_size);
-    int block_index = working_drive->superblock.first_block;
-    int pointer_index = fileDescriptor->cursor / (working_drive->superblock.block_size - 1);
-    int offset = fileDescriptor->cursor % (working_drive->superblock.block_size - 1);
+    unsigned long block_index = working_drive->superblock.first_block;
+    int pointer_index = fileDescriptor->cursor / (working_drive->superblock.block_size - sizeof(enum state_t));
+    int offset = fileDescriptor->cursor % (working_drive->superblock.block_size - sizeof(enum state_t));
     int pointer;
     int scanned_for_contiguous_space = 0;
 
@@ -301,24 +301,25 @@ int write_file(struct FileDescriptor *fileDescriptor, char *data, int size) {
             if (pointer != 0) {
                 // If block is assigned
                 fseek(drive_image, pointer, SEEK_SET);
-                fread(block, sizeof(struct Block), 1, drive_image);
+                fread(block, working_drive->superblock.block_size, 1, drive_image);
 
             } else {
                 // Else assign block
                 int found_contiguous_space = 0;
                 if (!scanned_for_contiguous_space) {
                     // Search for contiguous space
-                    int blocks_needed = (offset + size) / (working_drive->superblock.block_size - 1);
-                    int current_index = block_index;
+                    int blocks_needed =
+                            (offset + size) / (working_drive->superblock.block_size - sizeof(enum state_t)) +
+                            ((offset + size) / (working_drive->superblock.block_size - sizeof(enum state_t)) != 0);
+                    unsigned long current_index = block_index;
                     int contiguous_blocks = 0;
-                    struct Block current_block;
+                    struct Block *current_block = malloc(working_drive->superblock.block_size);
 
                     for (int new_index = 0; new_index < working_drive->superblock.block_count; new_index++) {
                         fseek(drive_image, current_index, SEEK_SET);
-                        fread(&current_block, sizeof(struct Block), 1, drive_image);
-                        current_index += sizeof(struct Block);
-
-                        if (current_block.state == EMPTY) {
+                        fread(current_block, working_drive->superblock.block_size, 1, drive_image);
+                        current_index += working_drive->superblock.block_size;
+                        if (current_block->state == EMPTY) {
                             contiguous_blocks += 1;
                             if (contiguous_blocks == blocks_needed) {
                                 found_contiguous_space = 1;
@@ -331,7 +332,7 @@ int write_file(struct FileDescriptor *fileDescriptor, char *data, int size) {
                     }
                 }
 
-                if(!found_contiguous_space && !scanned_for_contiguous_space){
+                if (!found_contiguous_space && !scanned_for_contiguous_space) {
                     // Start from the beginning
                     block_index = working_drive->superblock.first_block;
                 }
@@ -340,12 +341,13 @@ int write_file(struct FileDescriptor *fileDescriptor, char *data, int size) {
 
                 while (block_index < working_drive->superblock.block_count) {
                     fseek(drive_image, block_index, SEEK_SET);
-                    fread(block, sizeof(struct Block), 1, drive_image);
+                    fread(block, working_drive->superblock.block_size, 1, drive_image);
 
                     if (block->state == EMPTY) {
+                        inode->size += working_drive->superblock.block_size - sizeof(enum state_t);
                         break;
                     } else {
-                        block_index += sizeof(struct Block);
+                        block_index += working_drive->superblock.block_size;
                     }
                 }
 
@@ -356,16 +358,18 @@ int write_file(struct FileDescriptor *fileDescriptor, char *data, int size) {
 
             // Write to block
             block->state = USED;
-            int amount_written = working_drive->superblock.block_size - 1 - offset;
+            int amount_written = working_drive->superblock.block_size - sizeof(enum state_t) - offset;
             memcpy(block->information, data, amount_written);
+            data = data + amount_written;
             size -= amount_written;
+            fileDescriptor->cursor += amount_written;
             pointer_index += 1;
             offset = 0;
 
             fseek(drive_image, block_index, SEEK_SET);
-            fwrite(block, sizeof(struct Block), 1, drive_image);
+            fwrite(block, working_drive->superblock.block_size, 1, drive_image);
 
-            block_index += sizeof(struct Block);
+            block_index += working_drive->superblock.block_size;
 
         } else {
             // Check continuation inode
@@ -419,6 +423,50 @@ int write_file(struct FileDescriptor *fileDescriptor, char *data, int size) {
     }
 
     return 0;
+};
+
+char *read_file(struct FileDescriptor *fileDescriptor) {
+    struct iNode *inode = fileDescriptor->inode;
+    struct Block *block = malloc(working_drive->superblock.block_size);
+    int pointer_index = fileDescriptor->cursor / (working_drive->superblock.block_size - sizeof(enum state_t));
+    int offset = fileDescriptor->cursor % (working_drive->superblock.block_size - sizeof(enum state_t));
+    int pointer;
+    int copied = 0;
+    int size = inode->size - fileDescriptor->cursor;
+    char *data = malloc(sizeof(size));
+
+    while (copied < size) {
+        if (pointer_index < 15) {
+            pointer = inode->blocks[pointer_index];
+            if (pointer != 0) {
+                // If block is assigned
+                fseek(drive_image, pointer, SEEK_SET);
+                fread(block, working_drive->superblock.block_size, 1, drive_image);
+            }
+        } else {
+            // Load next inode
+            if (inode->continuation_iNode != 0) {
+                fseek(drive_image, inode->continuation_iNode, SEEK_SET);
+                fread(inode, sizeof(struct iNode), 1, drive_image);
+            } else {
+                printf("Corrupt file, size is bigger than assigned inodes.");
+                return NULL;
+            }
+        }
+
+        int to_be_copied;
+        if (working_drive->superblock.block_size - sizeof(enum state_t) < size) {
+            to_be_copied = working_drive->superblock.block_size - sizeof(enum state_t);
+        } else {
+            to_be_copied = size;
+        }
+        memcpy(data + copied, block->information + offset, to_be_copied);
+        copied += to_be_copied;
+        pointer_index += 1;
+        offset = 0;
+    }
+
+    return data;
 };
 
 int list_directories() {

@@ -8,12 +8,12 @@
 
 struct Superblock {
     char filename[256];
-    long int size;
-    int inode_count;
-    int block_count;
-    int first_block;
-    int block_size;
-    int inode_size;
-    int first_inode;
+    unsigned long size;
+    unsigned int inode_count;
+    unsigned int block_count;
+    unsigned long first_block;
+    unsigned int block_size;
+    unsigned int inode_size;
+    unsigned long first_inode;
 };
 #endif //FILESYSTEM_SUPERBLOCK_H

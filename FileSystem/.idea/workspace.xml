@@ -16,16 +16,18 @@
   </component>
   <component name="CMakeSettings">
     <configurations>
-      <configuration PROFILE_NAME="Debug" CONFIG_NAME="Debug" />
+      <configuration PROFILE_NAME="Debug" CONFIG_NAME="Debug" ENABLED="true" />
     </configurations>
   </component>
   <component name="ChangeListManager">
     <list default="true" id="362c5566-3c69-4bd8-ab40-bc7c6d66dbdc" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/Json/json_creation.c" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Json/json_creation.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BootAndReset/DiskManagement.c" beforeDir="false" afterPath="$PROJECT_DIR$/BootAndReset/DiskManagement.c" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/FileManagement/FileRW.c" beforeDir="false" afterPath="$PROJECT_DIR$/FileManagement/FileRW.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/FileManagement/FileRW.h" beforeDir="false" afterPath="$PROJECT_DIR$/FileManagement/FileRW.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/FileManagement/Superblock.h" beforeDir="false" afterPath="$PROJECT_DIR$/FileManagement/Superblock.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.c" beforeDir="false" afterPath="$PROJECT_DIR$/main.c" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -62,19 +64,19 @@
     <property name="settings.editor.selected.configurable" value="CPPToolchains" />
   </component>
   <component name="RunManager">
-    <configuration default="true" type="CLionExternalRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" PASS_PARENT_ENVS_2="true">
+    <configuration default="true" type="CLionExternalRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" PASS_PARENT_ENVS_2="true">
       <method v="2">
         <option name="CLION.EXTERNAL.BUILD" enabled="true" />
       </method>
     </configuration>
-    <configuration name="FileSystem" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="FileSystem" TARGET_NAME="FileSystem" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="FileSystem" RUN_TARGET_NAME="FileSystem">
+    <configuration name="FileSystem" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="FileSystem" TARGET_NAME="FileSystem" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="FileSystem" RUN_TARGET_NAME="FileSystem">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
     </configuration>
-    <configuration default="true" type="GradleAppRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" PASS_PARENT_ENVS_2="true">
+    <configuration default="true" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" PASS_PARENT_ENVS_2="true">
       <method v="2">
-        <option name="com.jetbrains.cidr.cpp.gradle.execution.GradleNativeBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
     </configuration>
   </component>
@@ -89,9 +91,7 @@
       <workItem from="1607270812896" duration="21601000" />
       <workItem from="1607390033681" duration="13963000" />
       <workItem from="1607438385475" duration="17250000" />
-      <workItem from="1607617395270" duration="14155000" />
-      <workItem from="1607642935610" duration="18000" />
-      <workItem from="1607650424464" duration="3421000" />
+      <workItem from="1607617395270" duration="27133000" />
     </task>
     <servers />
   </component>
@@ -110,13 +110,16 @@
     </option>
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
-  <component name="WindowStateProjectService">
-    <state x="779" y="311" width="424" height="491" key="FileChooserDialogImpl" timestamp="1607642952341">
-      <screen x="72" y="27" width="1848" height="1053" />
-    </state>
-    <state x="779" y="311" width="424" height="491" key="FileChooserDialogImpl/72.27.1848.1053/1920.0.1920.1080@72.27.1848.1053" timestamp="1607642952341" />
-  </component>
   <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/FileManagement/FileRW.c</url>
+          <line>457</line>
+          <option name="timeStamp" value="35" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
     <watches-manager>
       <configuration name="CMakeRunConfiguration">
         <watch expression="current_dir-&gt;iNode_parent" />

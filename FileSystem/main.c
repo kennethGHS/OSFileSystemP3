@@ -35,8 +35,9 @@ int main() {
     open_file("prueba3");
     fd = open_file("prueba4");
     list_directories();
-    write_file(fd, "Hola mundo! Esto es una prueba muy larga y necesito saber que tanto funciona la funcion de write file asi que estoy haciendo esto bien largo.", 142);
-    list_directories();
-
+    write_file(fd, "Hola mundo! Esto es una prueba muy larga y necesito saber que tanto funciona la funcion de write file asi que estoy haciendo esto bien largo. ", 2);
+//    write_file(fd, "Hola mundo! Esto es una prueba muy larga y necesito saber que tanto funciona la funcion de write file asi que estoy haciendo esto bien largo. ", 142);
+    fd->cursor = 0; // Seek 0 falta implementar
+    printf("Lectura: |%s|", read_file(fd));
     return 0;
 }
