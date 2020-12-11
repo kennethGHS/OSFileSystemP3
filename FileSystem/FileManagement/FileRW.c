@@ -426,14 +426,15 @@ int write_file(struct FileDescriptor *fileDescriptor, char *data, int size) {
 };
 
 char *read_file(struct FileDescriptor *fileDescriptor) {
-    struct iNode *inode = fileDescriptor->inode;
+    struct iNode *inode = malloc(sizeof(struct iNode));
+    memcpy(inode, fileDescriptor->inode, sizeof(struct iNode));
     struct Block *block = malloc(working_drive->superblock.block_size);
     int pointer_index = fileDescriptor->cursor / (working_drive->superblock.block_size - sizeof(enum state_t));
     int offset = fileDescriptor->cursor % (working_drive->superblock.block_size - sizeof(enum state_t));
     int pointer;
     int copied = 0;
     int size = inode->size - fileDescriptor->cursor;
-    char *data = malloc(sizeof(size));
+    char *data = malloc(size);
 
     while (copied < size) {
         if (pointer_index < 15) {
@@ -466,6 +467,8 @@ char *read_file(struct FileDescriptor *fileDescriptor) {
         offset = 0;
     }
 
+    free(inode);
+    free(block);
     return data;
 };
 

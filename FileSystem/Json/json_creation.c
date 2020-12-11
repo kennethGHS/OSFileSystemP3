@@ -2,7 +2,7 @@
 // Created by kenneth on 10/12/20.
 //
 
-#include <bits/types/FILE.h>
+#include <stdio.h>
 #include "json_creation.h"
 struct json_object *
 create_json_(char *file_name, char *type, char *owner, char *modify_date, char *created_date, char *size,
