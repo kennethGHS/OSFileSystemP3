@@ -25,6 +25,8 @@ int write_file(struct FileDescriptor *fileDescriptor, char *data, int size);
 char *read_file(struct FileDescriptor *fileDescriptor);
 
 int list_directories();
+
+int seek(struct FileDescriptor *fileDescriptor, int index);
 //int getFreeBlock();
 //int getRootInfo();
 //int setCursorToByte(int byteNumber);

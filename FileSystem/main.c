@@ -38,7 +38,7 @@ int main() {
     write_file(fd, "Hola mundo! Esto es una prueba muy larga y necesito saber que tanto funciona la funcion de write file asi que estoy haciendo esto bien largo. ", 142);
     printf("Cursor actual: %d\n", fd->cursor);
     write_file(fd, "Prueba!!!", 10);
-    fd->cursor = 0; // Seek 0 falta implementar
+    seek(fd, 0);
     printf("Lectura: |%s|", read_file(fd));
     return 0;
 }

@@ -509,3 +509,8 @@ int list_directories() {
         }
     }
 }
+
+int seek(struct FileDescriptor *fileDescriptor, int index){
+    fileDescriptor->cursor = index;
+    return 0;
+};
