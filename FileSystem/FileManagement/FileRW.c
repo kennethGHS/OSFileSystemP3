@@ -287,7 +287,8 @@ int change_directory(char *filename) {
 };
 
 int write_file(struct FileDescriptor *fileDescriptor, char *data, int size) {
-    struct iNode *inode = fileDescriptor->inode;
+    struct iNode *inode = malloc(sizeof(struct iNode));
+    memcpy(inode, fileDescriptor->inode, sizeof(struct iNode));
     struct Block *block = malloc(working_drive->superblock.block_size);
     unsigned long block_index = working_drive->superblock.first_block;
     int pointer_index = fileDescriptor->cursor / (working_drive->superblock.block_size - sizeof(enum state_t));
@@ -300,6 +301,7 @@ int write_file(struct FileDescriptor *fileDescriptor, char *data, int size) {
             pointer = inode->blocks[pointer_index];
             if (pointer != 0) {
                 // If block is assigned
+                block_index = pointer;
                 fseek(drive_image, pointer, SEEK_SET);
                 fread(block, working_drive->superblock.block_size, 1, drive_image);
 
@@ -354,12 +356,21 @@ int write_file(struct FileDescriptor *fileDescriptor, char *data, int size) {
                 inode->blocks[pointer_index] = block_index;
                 fseek(drive_image, inode->index, SEEK_SET);
                 fwrite(inode, sizeof(struct iNode), 1, drive_image);
+
+                if(inode->type == FILE_START){
+                    memcpy(fileDescriptor->inode, inode, sizeof(struct iNode));
+                }
             }
 
             // Write to block
             block->state = USED;
-            int amount_written = working_drive->superblock.block_size - sizeof(enum state_t) - offset;
-            memcpy(block->information, data, amount_written);
+            int amount_written;
+            if(working_drive->superblock.block_size - sizeof(enum state_t) - offset < size) {
+                amount_written = working_drive->superblock.block_size - sizeof(enum state_t) - offset;
+            }else{
+                amount_written = size;
+            }
+            memcpy(block->information + offset, data, amount_written);
             data = data + amount_written;
             size -= amount_written;
             fileDescriptor->cursor += amount_written;
