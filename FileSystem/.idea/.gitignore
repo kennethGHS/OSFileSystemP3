@@ -106,3 +106,7 @@ fabric.properties
 .idea/codestream.xml
 
 # End of https://www.toptal.com/developers/gitignore/api/clion
+/misc.xml
+/vcs.xml
+/workspace.xml
+/modules.xml

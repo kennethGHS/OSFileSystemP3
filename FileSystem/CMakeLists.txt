@@ -3,4 +3,4 @@ project(FileSystem C)
 
 set(CMAKE_C_STANDARD 99)
 
-add_executable(FileSystem main.c FileManagement/FileRW.c FileManagement/Inode.h FileManagement/FileValidantions.h FileManagement/Block.h FileManagement/Superblock.h BootAndReset/DiskManagement.c)
+add_executable(FileSystem main.c FileManagement/FileRW.c FileManagement/Inode.h FileManagement/FileValidantions.h FileManagement/Block.h FileManagement/Superblock.h BootAndReset/DiskManagement.c Json/json_creation.h Json/json_creation.c)
