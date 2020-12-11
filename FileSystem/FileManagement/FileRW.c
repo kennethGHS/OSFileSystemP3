@@ -30,7 +30,6 @@ int set_current_user(char username[32]) {
     return 0;
 }
 
-// TODO check that all intermediate inodes are directories
 struct iNode *open_inode(char *filename, enum type_t type) {
     // Select current directory to search from
     struct iNode *current_dir = malloc(sizeof(struct iNode));
@@ -60,6 +59,10 @@ struct iNode *open_inode(char *filename, enum type_t type) {
                 fseek(drive_image, block_index, SEEK_SET);
                 fread(next_dir, sizeof(struct iNode), 1, drive_image);
                 if (strcmp(next_dir->filename, cur_filename) == 0) {
+                    if (next_filename != NULL && next_dir->type == FILE_START) {
+                        printf("Error: %s is a file, not a directory.\n", cur_filename);
+                        return NULL;
+                    }
                     current_dir = next_dir;
                     cur_inode_index = block_index;
                     cur_filename = next_filename;
@@ -216,7 +219,6 @@ int create_dir(char *filename) {
     }
 }
 
-// TODO check that all intermediate inodes are directories
 int change_directory(char *filename) {
     // Select current directory to search from
     struct iNode *current_dir = malloc(sizeof(struct iNode));
@@ -250,6 +252,10 @@ int change_directory(char *filename) {
                 fseek(drive_image, block_index, SEEK_SET);
                 fread(next_dir, sizeof(struct iNode), 1, drive_image);
                 if (strcmp(next_dir->filename, cur_filename) == 0) {
+                    if (next_dir->type == FILE_START) {
+                        printf("Error: %s is a file, not a directory.\n", cur_filename);
+                        return NULL;
+                    }
                     current_dir = next_dir;
                     cur_inode_index = block_index;
                     cur_filename = next_filename;
@@ -346,9 +352,9 @@ int write_file(struct FileDescriptor *fileDescriptor, char *data, int size) {
                     fread(block, working_drive->superblock.block_size, 1, drive_image);
 
                     if (block->state == EMPTY) {
-                        if(inode->type == FILE_START){
+                        if (inode->type == FILE_START) {
                             inode->size += working_drive->superblock.block_size - sizeof(enum state_t);
-                        }else {
+                        } else {
                             fileDescriptor->inode->size += working_drive->superblock.block_size - sizeof(enum state_t);
                             fseek(drive_image, fileDescriptor->inode->index, SEEK_SET);
                             fwrite(fileDescriptor->inode, sizeof(struct iNode), 1, drive_image);
@@ -363,7 +369,7 @@ int write_file(struct FileDescriptor *fileDescriptor, char *data, int size) {
                 fseek(drive_image, inode->index, SEEK_SET);
                 fwrite(inode, sizeof(struct iNode), 1, drive_image);
 
-                if(inode->type == FILE_START){
+                if (inode->type == FILE_START) {
                     memcpy(fileDescriptor->inode, inode, sizeof(struct iNode));
                 }
             }
@@ -371,9 +377,9 @@ int write_file(struct FileDescriptor *fileDescriptor, char *data, int size) {
             // Write to block
             block->state = USED;
             int amount_written;
-            if(working_drive->superblock.block_size - sizeof(enum state_t) - offset < size) {
+            if (working_drive->superblock.block_size - sizeof(enum state_t) - offset < size) {
                 amount_written = working_drive->superblock.block_size - sizeof(enum state_t) - offset;
-            }else{
+            } else {
                 amount_written = size;
             }
             memcpy(block->information + offset, data, amount_written);
@@ -519,7 +525,7 @@ int list_directories() {
     }
 }
 
-int seek(struct FileDescriptor *fileDescriptor, int index){
+int seek(struct FileDescriptor *fileDescriptor, int index) {
     fileDescriptor->cursor = index;
     return 0;
 };

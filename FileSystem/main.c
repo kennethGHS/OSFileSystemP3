@@ -29,7 +29,9 @@ int main() {
     }
     list_directories();
     create_dir("/1-dir/another_test");
+    create_dir("/1-file/another_test");
     change_directory("1-dir");
+    change_directory("2-file");
     create_dir("prueba1");
     create_dir("prueba2");
     open_file("prueba3");
