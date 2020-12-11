@@ -35,8 +35,17 @@ int main() {
     open_file("prueba3");
     fd = open_file("prueba4");
     list_directories();
-    write_file(fd, "Hola mundo! Esto es una prueba muy larga y necesito saber que tanto funciona la funcion de write file asi que estoy haciendo esto bien largo. ", 142);
-    printf("Cursor actual: %d\n", fd->cursor);
+
+
+
+    char string[145];
+    for(int i = 0; i < 10; i++) {
+        itoa(i, number, 10);
+        strcpy(string, number);
+        strcat(string, "-Hola mundo! Esto es una prueba muy larga y necesito saber que tanto funciona la funcion de write file asi que estoy haciendo esto bien largo. ");
+        write_file(fd, string, 143);
+    }
+
     write_file(fd, "Prueba!!!", 10);
     seek(fd, 0);
     printf("Lectura: |%s|", read_file(fd));

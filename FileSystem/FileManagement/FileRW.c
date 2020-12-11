@@ -346,7 +346,13 @@ int write_file(struct FileDescriptor *fileDescriptor, char *data, int size) {
                     fread(block, working_drive->superblock.block_size, 1, drive_image);
 
                     if (block->state == EMPTY) {
-                        inode->size += working_drive->superblock.block_size - sizeof(enum state_t);
+                        if(inode->type == FILE_START){
+                            inode->size += working_drive->superblock.block_size - sizeof(enum state_t);
+                        }else {
+                            fileDescriptor->inode->size += working_drive->superblock.block_size - sizeof(enum state_t);
+                            fseek(drive_image, fileDescriptor->inode->index, SEEK_SET);
+                            fwrite(fileDescriptor->inode, sizeof(struct iNode), 1, drive_image);
+                        }
                         break;
                     } else {
                         block_index += working_drive->superblock.block_size;
@@ -402,9 +408,11 @@ int write_file(struct FileDescriptor *fileDescriptor, char *data, int size) {
                         inode->continuation_iNode = continuation_index;
                         fseek(drive_image, inode->index, SEEK_SET);
                         fwrite(inode, sizeof(struct iNode), 1, drive_image);
+                        memcpy(fileDescriptor->inode, inode, sizeof(struct iNode));
 
                         struct iNode *extension = malloc(sizeof(struct iNode));
                         memcpy(extension, inode, sizeof(struct iNode));
+                        extension->index = continuation_index;
                         extension->type = DIRECTORY_EXTENSION;
                         time_t raw_time;
                         time(&raw_time);
@@ -460,6 +468,7 @@ char *read_file(struct FileDescriptor *fileDescriptor) {
             if (inode->continuation_iNode != 0) {
                 fseek(drive_image, inode->continuation_iNode, SEEK_SET);
                 fread(inode, sizeof(struct iNode), 1, drive_image);
+                pointer_index -= 15;
             } else {
                 printf("Corrupt file, size is bigger than assigned inodes.");
                 return NULL;
