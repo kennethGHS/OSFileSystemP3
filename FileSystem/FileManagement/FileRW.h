@@ -34,6 +34,8 @@ int delete_fd(struct FileDescriptor *fileDescriptor);
 
 int delete(char *filename);
 
+static int delete_inode_reference(struct iNode *inode);
+
 static int delete_inode(unsigned long index);
 
 static int delete_block(unsigned long index);

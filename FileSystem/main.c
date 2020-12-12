@@ -55,5 +55,9 @@ int main() {
     list_directories(NULL);
     change_directory("..");
     list_directories(NULL);
+    delete("/1-dir/prueba2");
+    list_directories("/1-dir");
+    delete("1-dir");
+    list_directories(NULL);
     return 0;
 }

@@ -57,7 +57,7 @@ static struct iNode *open_inode(char *filename, enum type_t type) {
             block_index = current_dir->iNode_parent;
             fseek(drive_image, block_index, SEEK_SET);
             fread(next_dir, sizeof(struct iNode), 1, drive_image);
-            current_dir = next_dir;
+            memcpy(current_dir, next_dir, sizeof(struct iNode));
             cur_inode_index = block_index;
             cur_filename = next_filename;
             next_filename = strtok(NULL, "/");
@@ -74,7 +74,7 @@ static struct iNode *open_inode(char *filename, enum type_t type) {
                             printf("Error: %s is a file, not a directory.\n", cur_filename);
                             return NULL;
                         }
-                        current_dir = next_dir;
+                        memcpy(current_dir, next_dir, sizeof(struct iNode));
                         cur_inode_index = block_index;
                         cur_filename = next_filename;
                         next_filename = strtok(NULL, "/");
@@ -215,17 +215,13 @@ static int get_inode_index(char *filename) {
     // Select current directory to search from
     struct iNode *current_dir = malloc(sizeof(struct iNode));
     unsigned long cur_inode_index;
-    int using_root;
     if (filename[0] == '/') {
-        memcpy(current_dir, &(working_drive->root), sizeof(struct iNode));
         cur_inode_index = working_drive->superblock.first_inode;
-        using_root = 1;
     } else {
-        fseek(drive_image, cwd_index, SEEK_SET);
-        fread(current_dir, sizeof(struct iNode), 1, drive_image);
         cur_inode_index = cwd_index;
-        using_root = 0;
     }
+    fseek(drive_image, cur_inode_index, SEEK_SET);
+    fread(current_dir, sizeof(struct iNode), 1, drive_image);
 
     // Split path
     char *cur_filename = strtok(filename, "/");
@@ -242,7 +238,7 @@ static int get_inode_index(char *filename) {
             block_index = current_dir->iNode_parent;
             fseek(drive_image, block_index, SEEK_SET);
             fread(next_dir, sizeof(struct iNode), 1, drive_image);
-            current_dir = next_dir;
+            memcpy(current_dir, next_dir, sizeof(struct iNode));
             cur_inode_index = block_index;
             cur_filename = next_filename;
             next_filename = strtok(NULL, "/");
@@ -259,7 +255,7 @@ static int get_inode_index(char *filename) {
                             printf("Error: %s is a file, not a directory.\n", cur_filename);
                             return NULL;
                         }
-                        current_dir = next_dir;
+                        memcpy(current_dir, next_dir, sizeof(struct iNode));
                         cur_inode_index = block_index;
                         cur_filename = next_filename;
                         next_filename = strtok(NULL, "/");
@@ -585,25 +581,42 @@ int seek(struct FileDescriptor *fileDescriptor, int index) {
 
 int delete_fd(struct FileDescriptor *fileDescriptor) {
     delete_inode(fileDescriptor->inode->index);
+    int result = delete_inode_reference(fileDescriptor->inode);
+    if(result == 0){
+        free(fileDescriptor);
+        return 0;
+    }else{
+        return 1;
+    }
+};
 
-    // Delete pointer from parent
+int delete(char *filename) {
+    int cur_inode_index = get_inode_index(filename);
+    if (cur_inode_index == 0) {
+        return 1;
+    }
+    fseek(drive_image, cur_inode_index, SEEK_SET);
     struct iNode inode;
-    fseek(drive_image, fileDescriptor->inode->iNode_parent, SEEK_SET);
     fread(&inode, sizeof(struct iNode), 1, drive_image);
+    delete_inode(cur_inode_index);
+    return delete_inode_reference(&inode);
+};
+
+static int delete_inode_reference(struct iNode *inode){
+    // Delete pointer from parent
+    struct iNode parent;
+    fseek(drive_image, inode->iNode_parent, SEEK_SET);
+    fread(&parent, sizeof(struct iNode), 1, drive_image);
 
     for (int i = 0; i < 15; i++) {
-        if (inode.blocks[i] == fileDescriptor->inode->index) {
-            inode.blocks[i] = 0;
-            fseek(drive_image, fileDescriptor->inode->iNode_parent, SEEK_SET);
-            fwrite(&inode, sizeof(struct iNode), 1, drive_image);
-            free(fileDescriptor);
+        if (parent.blocks[i] == inode->index) {
+            parent.blocks[i] = 0;
+            fseek(drive_image, inode->iNode_parent, SEEK_SET);
+            fwrite(&parent, sizeof(struct iNode), 1, drive_image);
             return 0;
         }
     }
     return 1;
-};
-
-int delete(char *filename) {
 };
 
 static int delete_inode(unsigned long index) {
