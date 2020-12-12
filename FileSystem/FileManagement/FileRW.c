@@ -31,7 +31,7 @@ int set_current_user(char username[32]) {
     return 0;
 }
 
-struct iNode *open_inode(char *filename, enum type_t type) {
+static struct iNode *open_inode(char *filename, enum type_t type) {
     // Select current directory to search from
     struct iNode *current_dir = malloc(sizeof(struct iNode));
     unsigned long cur_inode_index;
@@ -420,7 +420,7 @@ int write_file(struct FileDescriptor *fileDescriptor, char *data, int size) {
                         struct iNode *extension = malloc(sizeof(struct iNode));
                         memcpy(extension, inode, sizeof(struct iNode));
                         extension->index = continuation_index;
-                        extension->type = DIRECTORY_EXTENSION;
+                        extension->type = FILE_EXTENSION;
                         time_t raw_time;
                         time(&raw_time);
                         extension->modified_datetime = raw_time;
@@ -535,14 +535,58 @@ int seek(struct FileDescriptor *fileDescriptor, int index) {
     return 0;
 };
 
-int delete(struct FileDescriptor *fileDescriptor){
+int delete_fd(struct FileDescriptor *fileDescriptor) {
+    delete_inode(fileDescriptor->inode->index);
+
+    // Delete pointer from parent
+    struct iNode inode;
+    fseek(drive_image, fileDescriptor->inode->iNode_parent, SEEK_SET);
+    fread(&inode, sizeof(struct iNode), 1, drive_image);
+
+    for (int i = 0; i < 15; i++) {
+        if (inode.blocks[i] == fileDescriptor->inode->index) {
+            inode.blocks[i] = 0;
+            fseek(drive_image, fileDescriptor->inode->iNode_parent, SEEK_SET);
+            fwrite(&inode, sizeof(struct iNode), 1, drive_image);
+            free(fileDescriptor);
+            return 0;
+        }
+    }
+    return 1;
+};
+
+static int delete_inode(unsigned long index) {
+    struct iNode inode;
+    fseek(drive_image, index, SEEK_SET);
+    fread(&inode, sizeof(struct iNode), 1, drive_image);
+
+    if (inode.type == DIRECTORY_START || inode.type == DIRECTORY_EXTENSION) {
+        for (int i = 0; i < 15; i++) {
+            if (inode.blocks[i] != 0) {
+                delete_inode(inode.blocks[i]);
+            }
+        }
+    } else if (inode.type == FILE_START || inode.type == FILE_EXTENSION) {
+        for (int i = 0; i < 15; i++) {
+            if (inode.blocks[i] != 0) {
+                delete_block(inode.blocks[i]);
+            }
+        }
+    }
+
+    if (inode.continuation_iNode != 0) {
+        delete_inode(inode.continuation_iNode);
+    }
+
+    inode.type = FREE;
+    fseek(drive_image, index, SEEK_SET);
+    fwrite(&inode, sizeof(struct iNode), 1, drive_image);
     return 0;
 };
 
-int delete_inode(unsigned long index){
-
-};
-
-int delete_block(unsigned long index){
-
-};
+static int delete_block(unsigned long index) {
+    struct Block empty_block = {.state = FREE};
+    fseek(drive_image, index, SEEK_SET);
+    fwrite(&empty_block, sizeof(empty_block), 1, drive_image);
+    return 0;
+}

@@ -51,5 +51,7 @@ int main() {
     write_file(fd, "Prueba!!!", 10);
     seek(fd, 0);
     printf("Lectura: |%s|", read_file(fd));
+    delete_fd(fd);
+    list_directories();
     return 0;
 }

@@ -12,7 +12,7 @@ int set_working_drive(struct Drive *drive);
 
 int set_current_user(char username[32]);
 
-struct iNode *open_inode(char *filename, enum type_t type);
+static struct iNode *open_inode(char *filename, enum type_t type);
 
 struct FileDescriptor *open_file(char *filename);
 
@@ -28,10 +28,10 @@ struct iNode *list_directories();
 
 int seek(struct FileDescriptor *fileDescriptor, int index);
 
-int delete(struct FileDescriptor *fileDescriptor);
+int delete_fd(struct FileDescriptor *fileDescriptor);
 
-int delete_inode(unsigned long index);
+static int delete_inode(unsigned long index);
 
-int delete_block(unsigned long index);
+static int delete_block(unsigned long index);
 
 #endif //FILESYSTEM_FILERW_H
