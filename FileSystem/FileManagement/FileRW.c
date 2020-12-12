@@ -327,6 +327,7 @@ int change_directory(char *filename) {
 };
 
 int write_file(struct FileDescriptor *fileDescriptor, char *data, int size) {
+    printf("%s\t%d\n", data, size);
     struct iNode *inode = malloc(sizeof(struct iNode));
     memcpy(inode, fileDescriptor->inode, sizeof(struct iNode));
     struct Block *block = malloc(working_drive->superblock.block_size);
@@ -582,15 +583,15 @@ int seek(struct FileDescriptor *fileDescriptor, int index) {
 int delete_fd(struct FileDescriptor *fileDescriptor) {
     delete_inode(fileDescriptor->inode->index);
     int result = delete_inode_reference(fileDescriptor->inode);
-    if(result == 0){
+    if (result == 0) {
         free(fileDescriptor);
         return 0;
-    }else{
+    } else {
         return 1;
     }
 };
 
-int delete(char *filename) {
+int delete_(char *filename) {
     int cur_inode_index = get_inode_index(filename);
     if (cur_inode_index == 0) {
         return 1;
@@ -602,7 +603,7 @@ int delete(char *filename) {
     return delete_inode_reference(&inode);
 };
 
-static int delete_inode_reference(struct iNode *inode){
+static int delete_inode_reference(struct iNode *inode) {
     // Delete pointer from parent
     struct iNode parent;
     fseek(drive_image, inode->iNode_parent, SEEK_SET);

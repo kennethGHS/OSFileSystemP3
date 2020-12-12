@@ -21,6 +21,7 @@
 #include <QDialog>
 #include <QListWidget>
 #include <QDebug>
+#include "../FileSystem/FileManagement/Inode.h"
 
 /**
  * Subclasssing QListWidget
@@ -194,6 +195,8 @@ private:
 
     QString processCommand(const QString &command, int id);
 
+    void showFiles(QList<QPair<type_t, QPair<QString, time_t>>> elements);
+
 protected:
     //colors
     QColor cmdColor_, errColor_, outColor_, completionColor, userColor_, pathColor_;
@@ -268,3 +271,7 @@ private:
 
     void pExecCommand(const QString &command);
 };
+
+bool compareFilesByName(QPair<type_t, QPair<QString, time_t>> file, QPair<type_t, QPair<QString, time_t>> file2);
+
+bool compareFilesByDate(QPair<type_t, QPair<QString, time_t>> file, QPair<type_t, QPair<QString, time_t>> file2);

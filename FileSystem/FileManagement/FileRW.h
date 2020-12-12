@@ -32,7 +32,7 @@ int seek(struct FileDescriptor *fileDescriptor, int index);
 
 int delete_fd(struct FileDescriptor *fileDescriptor);
 
-int delete(char *filename);
+int delete_(char *filename);
 
 static int delete_inode_reference(struct iNode *inode);
 

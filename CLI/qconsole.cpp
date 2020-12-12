@@ -20,7 +20,10 @@
 #include <QDesktopWidget>
 #include <regex>
 #include <QKeySequence>
-#include <zconf.h>
+
+extern "C" {
+#include "../FileSystem/FileManagement/FileRW.h"
+}
 
 //#define USE_POPUP_COMPLETER
 #define WRITE_ONLY QIODevice::WriteOnly
@@ -228,21 +231,21 @@ QConsole::QConsole(QWidget *parent, const QString &welcomeText)
 }
 
 void QConsole::initCommands() {
-    commands.append("su -l (.+)");                              // su -l [username]
+    commands.append("su +-l +(.+)");                              // su -l [username]
     commands.append("su *");                                    // su
-    commands.append("ls (.*)|ls *");                            // ls [path]
-    commands.append("cd (.+)|cd *");                            // cd [path]
-    commands.append("touch (.+)");                              // touch [filename]
-    commands.append("cat ([^>+]*)");                            // cat [filename]
-    commands.append("cat ([^>+]*) *> *(([^>+]|\n)*)");          // cat [filename] > [content]
-    commands.append("cat ([^>+]*) *>> *(([^>+]|\n)*)");         // cat [filename] >> [content]
+    commands.append("ls +(.*)|ls *");                            // ls [path]
+    commands.append("cd +(.+)|cd *");                            // cd [path]
+    commands.append("touch +(.+)");                              // touch [filename]
+    commands.append("cat +([^>+ ]*) *");                            // cat [filename]
+    commands.append("cat +([^>+ ]*) *> *(([^>+]|\n)*)");          // cat [filename] > [content]
+    commands.append("cat +([^>+ ]*) *>> *(([^>+]|\n)*)");         // cat [filename] >> [content]
     commands.append("echo +'([^']+)' +> (.+)");                 // echo [content] > [filename]
     commands.append("printf +'(.+)' +(.+)");                    // printf [content] [filename]
     commands.append("edit");                                    // edit [filename]
-    commands.append("rm ([^-]+)");                              // rm [filename]
-    commands.append("mkdir (.+)");                              // mkdir [dirname]
-    commands.append("rmdir (.+)");                              // rmdir [dirname]
-    commands.append("rm -r (.+)");                              // rm -r [dirname]
+    commands.append("rm +([^-]+)");                              // rm [filename]
+    commands.append("mkdir +(.+)");                              // mkdir [dirname]
+    commands.append("rmdir +(.+)");                              // rmdir [dirname]
+    commands.append("rm +-r +(.+)");                              // rm -r [dirname]
     commands.append("clear *");                                 // clear
     commands.append("help *");                                  // help
     commands.append("exit *");                                  // help
@@ -251,7 +254,6 @@ void QConsole::initCommands() {
 //Sets the prompt and cache the prompt length to optimize the processing speed
 void QConsole::setPrompt(const QString &newPrompt, bool display) {
     prompt = newPrompt;
-    promptLength = prompt.length() + username.length() + 2;
     //display the new prompt
     if (display)
         displayPrompt();
@@ -260,6 +262,7 @@ void QConsole::setPrompt(const QString &newPrompt, bool display) {
 
 //Displays the prompt and move the cursor to the end of the line.
 void QConsole::displayPrompt() {
+    promptLength = prompt.length() + username.length() + 2;
     //Prevent previous text displayed to be undone
     setUndoRedoEnabled(false);
     //displays the prompt
@@ -625,42 +628,67 @@ QString QConsole::processCommand(const QString &command, int id) {
         case 0: //su -l []
             if (std::regex_search(s.begin(), s.end(), match, format)) {
                 setUsername(match.str(1).c_str());
-                result = "user changed successfully";
+                char *temp_username = strdup(match.str(1).c_str());
+                set_current_user(temp_username);
+                free(temp_username);
             }
             break;
         case 1: //su
-            setUsername("root");
-            result = "user changed successfully";
+        {
+            char *temp_username = strdup("root");
+            setUsername(temp_username);
+            set_current_user(temp_username);
+            free(temp_username);
             break;
+        }
         case 2: //ls []
             if (std::regex_search(s.begin(), s.end(), match, format)) {
-                result = "list of files ";
-                result.append(match.str(1).c_str());
+                QList<QPair<type_t, QPair<QString, time_t>>> elements;
+                iNode *root = list_directories(NULL);
+                int i = 0;
+                while (root[i].type != EMPTY) {
+                    struct tm *modified = localtime(&(root[i].modified_datetime));
+                    QPair<QString, time_t> temp = QPair<QString, time_t>(QString(root[i].filename),
+                                                                         root[i].modified_datetime);
+
+                    elements.append(QPair<type_t, QPair<QString, time_t>>(root[i].type, temp));
+                    i++;
+                }
+                std::sort(elements.begin(), elements.end(), compareFilesByName);
+//                std::sort(elements.begin(), elements.end(), compareFilesByDate);
+                showFiles(elements);
             }
             break;
         case 3: //cd []
             if (std::regex_search(s.begin(), s.end(), match, format)) {
-                result = "change directory ";
+                char *new_dir = strdup(match.str(1).c_str());
+                change_directory(new_dir);
+                free(new_dir);
                 result.append(match.str(1).c_str());
             }
             break;
         case 4: //touch []
             if (std::regex_search(s.begin(), s.end(), match, format)) {
-                result = "create file ";
+                char *new_file = strdup(match.str(1).c_str());
+                open_file(new_file);
+                free(new_file);
                 result.append(match.str(1).c_str());
             }
             break;
         case 5: //cat []
             if (std::regex_search(s.begin(), s.end(), match, format)) {
-                result = "show contents ";
-                result.append(match.str(1).c_str());
+                char *file = strdup(match.str(1).c_str());
+                FileDescriptor *fd = open_file(file);
+                seek(fd, 0);
+                result.append(QString(read_file(fd)));
             }
             break;
         case 6: //cat [] > []
             if (std::regex_search(s.begin(), s.end(), match, format)) {
-                result = "write to file ";
-                result.append(match.str(1).c_str());
-                result.append(match.str(2).c_str());
+                char *file = strdup(match.str(1).c_str());
+                FileDescriptor *fd = open_file(file);
+                char *content = strdup(match.str(2).c_str());
+                write_file(fd, content, match.str(2).length() + 1);
             }
             break;
         case 7: //cat [] >> []
@@ -688,26 +716,50 @@ QString QConsole::processCommand(const QString &command, int id) {
             break;
         case 11: //rm []
             if (std::regex_search(s.begin(), s.end(), match, format)) {
-                result = "remove file ";
-                result.append(match.str(1).c_str());
+//                result = "remove file ";
+                char *file = strdup(match.str(1).c_str());
+                int errno_ = delete_(file);
+                free(file);
+                if (errno_ == 1) {
+                    result.append("Path doesn't exist");
+                } else {
+                    result.append(match.str(1).c_str());
+                }
             }
             break;
         case 12: //mkdir []
             if (std::regex_search(s.begin(), s.end(), match, format)) {
                 result = "create directory ";
+                char *new_dir = strdup(match.str(1).c_str());
+                create_dir(new_dir);
+                free(new_dir);
                 result.append(match.str(1).c_str());
             }
             break;
         case 13: //rmdir []
             if (std::regex_search(s.begin(), s.end(), match, format)) {
-                result = "remove empty directory ";
-                result.append(match.str(1).c_str());
+//                result = "remove empty directory ";
+                char *file = strdup(match.str(1).c_str());
+                int errno_ = delete_(file);
+                if (errno_ == 1) {
+                    result.append("Path doesn't exist");
+                } else {
+                    result.append(match.str(1).c_str());
+                }
+                free(file);
             }
             break;
         case 14: //rm -r []
             if (std::regex_search(s.begin(), s.end(), match, format)) {
-                result = "remove directory (and contents recursivly) ";
-                result.append(match.str(1).c_str());
+//                result = "remove directory (and contents recursivly) ";
+                char *file = strdup(match.str(1).c_str());
+                int errno_ = delete_(file);
+                if (errno_ == 1) {
+                    result.append("Path doesn't exist");
+                } else {
+                    result.append(match.str(1).c_str());
+                }
+                free(file);
             }
             break;
         case 15: //clear
@@ -742,6 +794,17 @@ void QConsole::printCommandExecutionResults(const QString &result, ResultType ty
     moveCursor(QTextCursor::End);
 }
 
+void QConsole::showFiles(QList<QPair<type_t, QPair<QString, time_t>>> elements) {
+    //TODO Readonly
+    for (QPair<type_t, QPair<QString, time_t>> element : elements) {
+        if (element.first == FILE_START) {
+            setTextColor(cmdColor_);
+        } else if (element.first == DIRECTORY_START) {
+            setTextColor(Qt::cyan);
+        }
+        append(element.second.first);
+    }
+}
 
 //Change paste behaviour
 void QConsole::insertFromMimeData(const QMimeData *source) {
@@ -874,4 +937,13 @@ void QConsole::correctPathName(QString &pathName) {
     if (pathName.contains(tr(":\\"))) {
         pathName.replace('\\', tr("/"));
     }
+
+}
+
+bool compareFilesByName(QPair<type_t, QPair<QString, time_t>> file, QPair<type_t, QPair<QString, time_t>> file2) {
+    return file.second.first < file2.second.first;
+}
+
+bool compareFilesByDate(QPair<type_t, QPair<QString, time_t>> file, QPair<type_t, QPair<QString, time_t>> file2) {
+    return difftime(file.second.second, file2.second.second) < 0;
 }
