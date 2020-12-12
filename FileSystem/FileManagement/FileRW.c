@@ -52,22 +52,35 @@ static struct iNode *open_inode(char *filename, enum type_t type) {
         found = 0;
         // Search current filename in current_dir to get next dir
         unsigned long block_index;
-        for (int i = 0; i < 15; i++) {
-            block_index = current_dir->blocks[i];
-            if (block_index != 0) {
-                fseek(drive_image, block_index, SEEK_SET);
-                fread(next_dir, sizeof(struct iNode), 1, drive_image);
-                if (strcmp(next_dir->filename, cur_filename) == 0) {
-                    if (next_filename != NULL && next_dir->type == FILE_START) {
-                        printf("Error: %s is a file, not a directory.\n", cur_filename);
-                        return NULL;
+
+        if (strcmp(cur_filename, "..") == 0) {
+            block_index = current_dir->iNode_parent;
+            fseek(drive_image, block_index, SEEK_SET);
+            fread(next_dir, sizeof(struct iNode), 1, drive_image);
+            current_dir = next_dir;
+            cur_inode_index = block_index;
+            cur_filename = next_filename;
+            next_filename = strtok(NULL, "/");
+            found = 1;
+            break;
+        } else {
+            for (int i = 0; i < 15; i++) {
+                block_index = current_dir->blocks[i];
+                if (block_index != 0) {
+                    fseek(drive_image, block_index, SEEK_SET);
+                    fread(next_dir, sizeof(struct iNode), 1, drive_image);
+                    if (strcmp(next_dir->filename, cur_filename) == 0) {
+                        if (next_filename != NULL && next_dir->type == FILE_START) {
+                            printf("Error: %s is a file, not a directory.\n", cur_filename);
+                            return NULL;
+                        }
+                        current_dir = next_dir;
+                        cur_inode_index = block_index;
+                        cur_filename = next_filename;
+                        next_filename = strtok(NULL, "/");
+                        found = 1;
+                        break;
                     }
-                    current_dir = next_dir;
-                    cur_inode_index = block_index;
-                    cur_filename = next_filename;
-                    next_filename = strtok(NULL, "/");
-                    found = 1;
-                    break;
                 }
             }
         }
@@ -198,7 +211,7 @@ static struct iNode *open_inode(char *filename, enum type_t type) {
     }
 };
 
-static int get_inode_index(char *filename){
+static int get_inode_index(char *filename) {
     // Select current directory to search from
     struct iNode *current_dir = malloc(sizeof(struct iNode));
     unsigned long cur_inode_index;
@@ -224,22 +237,35 @@ static int get_inode_index(char *filename){
         found = 0;
         // Search current filename in current_dir to get next dir
         unsigned long block_index;
-        for (int i = 0; i < 15; i++) {
-            block_index = current_dir->blocks[i];
-            if (block_index != 0) {
-                fseek(drive_image, block_index, SEEK_SET);
-                fread(next_dir, sizeof(struct iNode), 1, drive_image);
-                if (strcmp(next_dir->filename, cur_filename) == 0) {
-                    if (next_dir->type == FILE_START) {
-                        printf("Error: %s is a file, not a directory.\n", cur_filename);
-                        return NULL;
+
+        if (strcmp(cur_filename, "..") == 0) {
+            block_index = current_dir->iNode_parent;
+            fseek(drive_image, block_index, SEEK_SET);
+            fread(next_dir, sizeof(struct iNode), 1, drive_image);
+            current_dir = next_dir;
+            cur_inode_index = block_index;
+            cur_filename = next_filename;
+            next_filename = strtok(NULL, "/");
+            found = 1;
+            break;
+        } else {
+            for (int i = 0; i < 15; i++) {
+                block_index = current_dir->blocks[i];
+                if (block_index != 0) {
+                    fseek(drive_image, block_index, SEEK_SET);
+                    fread(next_dir, sizeof(struct iNode), 1, drive_image);
+                    if (strcmp(next_dir->filename, cur_filename) == 0) {
+                        if (next_filename != NULL && next_dir->type == FILE_START) {
+                            printf("Error: %s is a file, not a directory.\n", cur_filename);
+                            return NULL;
+                        }
+                        current_dir = next_dir;
+                        cur_inode_index = block_index;
+                        cur_filename = next_filename;
+                        next_filename = strtok(NULL, "/");
+                        found = 1;
+                        break;
                     }
-                    current_dir = next_dir;
-                    cur_inode_index = block_index;
-                    cur_filename = next_filename;
-                    next_filename = strtok(NULL, "/");
-                    found = 1;
-                    break;
                 }
             }
         }
@@ -288,7 +314,7 @@ int create_dir(char *filename) {
 int change_directory(char *filename) {
     int cur_inode_index = get_inode_index(filename);
 
-    if(cur_inode_index == 0){
+    if (cur_inode_index == 0) {
         return 1;
     }
 
@@ -513,12 +539,12 @@ char *read_file(struct FileDescriptor *fileDescriptor) {
 struct iNode *list_directories(char *filename) {
     int index;
 
-    if(filename != NULL){
+    if (filename != NULL) {
         index = get_inode_index(filename);
-        if(index == 0){
+        if (index == 0) {
             return NULL;
         }
-    }else{
+    } else {
         index = cwd_index;
     }
 
@@ -575,6 +601,9 @@ int delete_fd(struct FileDescriptor *fileDescriptor) {
         }
     }
     return 1;
+};
+
+int delete(char *filename) {
 };
 
 static int delete_inode(unsigned long index) {

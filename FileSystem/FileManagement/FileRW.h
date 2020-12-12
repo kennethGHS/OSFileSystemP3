@@ -32,6 +32,8 @@ int seek(struct FileDescriptor *fileDescriptor, int index);
 
 int delete_fd(struct FileDescriptor *fileDescriptor);
 
+int delete(char *filename);
+
 static int delete_inode(unsigned long index);
 
 static int delete_block(unsigned long index);
