@@ -498,21 +498,24 @@ char *read_file(struct FileDescriptor *fileDescriptor) {
     return data;
 };
 
-int list_directories() {
+struct iNode *list_directories() {
     printf("-------------------\n");
     struct iNode current;
     fseek(drive_image, cwd_index, SEEK_SET);
     fread(&current, sizeof(struct iNode), 1, drive_image);
     printf("Current directory: %s\n", current.filename);
 
-    struct iNode sub_dir;
+    struct iNode *inode = malloc(sizeof(struct iNode) * 128);
+    int counter = 0;
+
     while (1) {
         for (int reference_index = 0; reference_index < 15; reference_index++) {
 //            printf("Block: %d Index: %d\n", reference_index, current.blocks[reference_index]);
             if (current.blocks[reference_index] != 0) {
                 fseek(drive_image, current.blocks[reference_index], SEEK_SET);
-                fread(&sub_dir, sizeof(struct iNode), 1, drive_image);
-                printf("%s\n", sub_dir.filename);
+                fread(inode + counter, sizeof(struct iNode), 1, drive_image);
+                printf("%s\n", inode[counter].filename);
+                counter++;
             }
         }
 
@@ -520,12 +523,17 @@ int list_directories() {
             fseek(drive_image, current.continuation_iNode, SEEK_SET);
             fread(&current, sizeof(struct iNode), 1, drive_image);
         } else {
-            return 0;
+            inode[counter].type = EMPTY;
+            return inode;
         }
     }
 }
 
 int seek(struct FileDescriptor *fileDescriptor, int index) {
     fileDescriptor->cursor = index;
+    return 0;
+};
+
+int delete(struct FileDescriptor *fileDescriptor){
     return 0;
 };

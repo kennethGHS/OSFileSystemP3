@@ -27,11 +27,7 @@ char *read_file(struct FileDescriptor *fileDescriptor);
 int list_directories();
 
 int seek(struct FileDescriptor *fileDescriptor, int index);
-//int getFreeBlock();
-//int getRootInfo();
-//int setCursorToByte(int byteNumber);
-//int searchDirectory(char ** listDirectories);
-//int searchFromCurrent(char * filename);
-//struct iNode * getInodeFilename();
+
+int delete(struct FileDescriptor *fileDescriptor);
 
 #endif //FILESYSTEM_FILERW_H
