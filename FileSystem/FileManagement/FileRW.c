@@ -1,6 +1,7 @@
 //
 // Created by Jasson Rodríguez Méndez on 6/12/20.
 //
+#include "FileRW.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -536,4 +537,12 @@ int seek(struct FileDescriptor *fileDescriptor, int index) {
 
 int delete(struct FileDescriptor *fileDescriptor){
     return 0;
+};
+
+int delete_inode(unsigned long index){
+
+};
+
+int delete_block(unsigned long index){
+
 };

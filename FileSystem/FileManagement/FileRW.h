@@ -24,10 +24,14 @@ int write_file(struct FileDescriptor *fileDescriptor, char *data, int size);
 
 char *read_file(struct FileDescriptor *fileDescriptor);
 
-int list_directories();
+struct iNode *list_directories();
 
 int seek(struct FileDescriptor *fileDescriptor, int index);
 
 int delete(struct FileDescriptor *fileDescriptor);
+
+int delete_inode(unsigned long index);
+
+int delete_block(unsigned long index);
 
 #endif //FILESYSTEM_FILERW_H
