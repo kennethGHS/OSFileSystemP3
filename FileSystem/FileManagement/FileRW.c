@@ -5,9 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "Inode.h"
 #include "../BootAndReset/Drive.h"
-#include "FileDescriptor.h"
 #include "Block.h"
 
 struct Drive *working_drive;
@@ -200,27 +198,7 @@ static struct iNode *open_inode(char *filename, enum type_t type) {
     }
 };
 
-struct FileDescriptor *open_file(char *filename) {
-    // Return file descriptor
-    struct iNode *next_dir = open_inode(filename, FILE_START);
-    struct FileDescriptor *file_descriptor = malloc(sizeof(struct FileDescriptor));
-    file_descriptor->cursor = 0;
-    file_descriptor->drive = working_drive;
-    file_descriptor->inode = next_dir;
-    return file_descriptor;
-
-};
-
-int create_dir(char *filename) {
-    struct iNode *dir = open_inode(filename, DIRECTORY_START);
-    if (dir != NULL) {
-        return 0;
-    } else {
-        return 1;
-    }
-}
-
-int change_directory(char *filename) {
+static int get_inode_index(char *filename){
     // Select current directory to search from
     struct iNode *current_dir = malloc(sizeof(struct iNode));
     unsigned long cur_inode_index;
@@ -230,7 +208,6 @@ int change_directory(char *filename) {
         cur_inode_index = working_drive->superblock.first_inode;
         using_root = 1;
     } else {
-        cwd_index = 288;
         fseek(drive_image, cwd_index, SEEK_SET);
         fread(current_dir, sizeof(struct iNode), 1, drive_image);
         cur_inode_index = cwd_index;
@@ -278,14 +255,48 @@ int change_directory(char *filename) {
                 printf("Error: directory %s doesn't exists.\n", cur_filename);
                 return NULL;
             } else {
-
+                cur_inode_index = 0;
+                printf("Error: path %s doesn't exists.\n", filename);
                 // Exit main loop
                 break;
             }
         }
     }
+    return cur_inode_index;
+}
 
-    if (next_dir->type == DIRECTORY_START) {
+struct FileDescriptor *open_file(char *filename) {
+    // Return file descriptor
+    struct iNode *next_dir = open_inode(filename, FILE_START);
+    struct FileDescriptor *file_descriptor = malloc(sizeof(struct FileDescriptor));
+    file_descriptor->cursor = 0;
+    file_descriptor->drive = working_drive;
+    file_descriptor->inode = next_dir;
+    return file_descriptor;
+
+};
+
+int create_dir(char *filename) {
+    struct iNode *dir = open_inode(filename, DIRECTORY_START);
+    if (dir != NULL) {
+        return 0;
+    } else {
+        return 1;
+    }
+}
+
+int change_directory(char *filename) {
+    int cur_inode_index = get_inode_index(filename);
+
+    if(cur_inode_index == 0){
+        return 1;
+    }
+
+    fseek(drive_image, cur_inode_index, SEEK_SET);
+    struct iNode inode;
+    fread(&inode, sizeof(struct iNode), 1, drive_image);
+
+    if (inode.type == DIRECTORY_START) {
         cwd_index = cur_inode_index;
         return 0;
     } else {
@@ -499,10 +510,21 @@ char *read_file(struct FileDescriptor *fileDescriptor) {
     return data;
 };
 
-struct iNode *list_directories() {
+struct iNode *list_directories(char *filename) {
+    int index;
+
+    if(filename != NULL){
+        index = get_inode_index(filename);
+        if(index == 0){
+            return NULL;
+        }
+    }else{
+        index = cwd_index;
+    }
+
     printf("-------------------\n");
     struct iNode current;
-    fseek(drive_image, cwd_index, SEEK_SET);
+    fseek(drive_image, index, SEEK_SET);
     fread(&current, sizeof(struct iNode), 1, drive_image);
     printf("Current directory: %s\n", current.filename);
 

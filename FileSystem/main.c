@@ -27,18 +27,18 @@ int main() {
         strcat(name, "-dir");
         create_dir(name);
     }
-    list_directories();
+    list_directories(NULL);
     create_dir("/1-dir/another_test");
     create_dir("/1-file/another_test");
+    list_directories("1-dir");
+    change_directory("2-file");
     change_directory("1-dir");
     change_directory("2-file");
     create_dir("prueba1");
     create_dir("prueba2");
     open_file("prueba3");
     fd = open_file("prueba4");
-    list_directories();
-
-
+    list_directories(NULL);
 
     char string[145];
     for(int i = 0; i < 10; i++) {
@@ -52,6 +52,6 @@ int main() {
     seek(fd, 0);
     printf("Lectura: |%s|", read_file(fd));
     delete_fd(fd);
-    list_directories();
+    list_directories(NULL);
     return 0;
 }
