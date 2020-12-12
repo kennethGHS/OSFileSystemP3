@@ -192,6 +192,8 @@ private:
     //Change paste behaviour
     void insertFromMimeData(const QMimeData *);
 
+    QString processCommand(const QString &command, int id);
+
 protected:
     //colors
     QColor cmdColor_, errColor_, outColor_, completionColor, userColor_, pathColor_;

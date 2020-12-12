@@ -20,6 +20,7 @@
 #include <QDesktopWidget>
 #include <regex>
 #include <QKeySequence>
+#include <zconf.h>
 
 //#define USE_POPUP_COMPLETER
 #define WRITE_ONLY QIODevice::WriteOnly
@@ -227,20 +228,24 @@ QConsole::QConsole(QWidget *parent, const QString &welcomeText)
 }
 
 void QConsole::initCommands() {
-    commands.append("su -l .+|su *");                           // su -l [username] | su
-    commands.append("ls .+|ls *");                              // ls [path] | ls
-    commands.append("cd .+|cd *");                              // cd [path] | cd
-    commands.append("touch .+");                                // touch [filename]
-    commands.append(
-            "cat [^>+]*|cat .*>{1,2}(.|\n)*");    // cat [filename] | cat [filename] > [content] | cat [filename] >> [content]
-    commands.append("echo +'[^']+' +> .+");                     // echo [content] > [filename]
-    commands.append("printf +'.+' +.+");                        // printf [content] > [filename]
-    commands.append("rm .+");                                   // rm [filename]
-    commands.append("mkdir .+");                                // mkdir [dirname]
-    commands.append("rmdir .+");                                // rmdir [dirname]
-    commands.append("rm -r .+");                                // rm -r [dirname]
+    commands.append("su -l (.+)");                              // su -l [username]
+    commands.append("su *");                                    // su
+    commands.append("ls (.*)|ls *");                            // ls [path]
+    commands.append("cd (.+)|cd *");                            // cd [path]
+    commands.append("touch (.+)");                              // touch [filename]
+    commands.append("cat ([^>+]*)");                            // cat [filename]
+    commands.append("cat ([^>+]*) *> *(([^>+]|\n)*)");          // cat [filename] > [content]
+    commands.append("cat ([^>+]*) *>> *(([^>+]|\n)*)");         // cat [filename] >> [content]
+    commands.append("echo +'([^']+)' +> (.+)");                 // echo [content] > [filename]
+    commands.append("printf +'(.+)' +(.+)");                    // printf [content] [filename]
+    commands.append("edit");                                    // edit [filename]
+    commands.append("rm ([^-]+)");                              // rm [filename]
+    commands.append("mkdir (.+)");                              // mkdir [dirname]
+    commands.append("rmdir (.+)");                              // rmdir [dirname]
+    commands.append("rm -r (.+)");                              // rm -r [dirname]
     commands.append("clear *");                                 // clear
     commands.append("help *");                                  // help
+    commands.append("exit *");                                  // help
 }
 
 //Sets the prompt and cache the prompt length to optimize the processing speed
@@ -591,15 +596,130 @@ QString QConsole::addCommandToHistory(const QString &command) {
 void QConsole::pExecCommand(const QString &command) {
     isLocked = true;
     ResultType result = ResultType::Error;
+    int id = 0;
     for (QString format: commands) {
         if (std::regex_match(command.toStdString().c_str(), std::regex(format.toStdString().c_str()))) {
             result = ResultType::Complete;
             break;
         }
+        id += 1;
     }
     addCommandToHistory(command);
-    printCommandExecutionResults(command, result);
+    if (result == ResultType::Error) {
+        QString errMsg = command;
+        errMsg.append(": Command not found");
+        printCommandExecutionResults(errMsg, result);
+    } else {
+        printCommandExecutionResults(processCommand(command, id), result);
+    }
+
     emit execCommand(command);
+}
+
+QString QConsole::processCommand(const QString &command, int id) {
+    const std::string s = command.toStdString();
+    std::smatch match;
+    std::regex format(commands.at(id).toStdString());
+    QString result;
+    switch (id) {
+        case 0: //su -l []
+            if (std::regex_search(s.begin(), s.end(), match, format)) {
+                setUsername(match.str(1).c_str());
+                result = "user changed successfully";
+            }
+            break;
+        case 1: //su
+            setUsername("root");
+            result = "user changed successfully";
+            break;
+        case 2: //ls []
+            if (std::regex_search(s.begin(), s.end(), match, format)) {
+                result = "list of files ";
+                result.append(match.str(1).c_str());
+            }
+            break;
+        case 3: //cd []
+            if (std::regex_search(s.begin(), s.end(), match, format)) {
+                result = "change directory ";
+                result.append(match.str(1).c_str());
+            }
+            break;
+        case 4: //touch []
+            if (std::regex_search(s.begin(), s.end(), match, format)) {
+                result = "create file ";
+                result.append(match.str(1).c_str());
+            }
+            break;
+        case 5: //cat []
+            if (std::regex_search(s.begin(), s.end(), match, format)) {
+                result = "show contents ";
+                result.append(match.str(1).c_str());
+            }
+            break;
+        case 6: //cat [] > []
+            if (std::regex_search(s.begin(), s.end(), match, format)) {
+                result = "write to file ";
+                result.append(match.str(1).c_str());
+                result.append(match.str(2).c_str());
+            }
+            break;
+        case 7: //cat [] >> []
+            if (std::regex_search(s.begin(), s.end(), match, format)) {
+                result = "append to file ";
+                result.append(match.str(1).c_str());
+                result.append(match.str(2).c_str());
+            }
+            break;
+        case 8: //echo [] > []
+            if (std::regex_search(s.begin(), s.end(), match, format)) {
+                result = "write to file ";
+                result.append(match.str(2).c_str());
+                result.append(match.str(1).c_str());
+            }
+            break;
+        case 9: //printf [] []
+            if (std::regex_search(s.begin(), s.end(), match, format)) {
+                result = "write to file ";
+                result.append(match.str(2).c_str());
+                result.append(match.str(1).c_str());
+            }
+            break;
+        case 10: //edit []
+            break;
+        case 11: //rm []
+            if (std::regex_search(s.begin(), s.end(), match, format)) {
+                result = "remove file ";
+                result.append(match.str(1).c_str());
+            }
+            break;
+        case 12: //mkdir []
+            if (std::regex_search(s.begin(), s.end(), match, format)) {
+                result = "create directory ";
+                result.append(match.str(1).c_str());
+            }
+            break;
+        case 13: //rmdir []
+            if (std::regex_search(s.begin(), s.end(), match, format)) {
+                result = "remove empty directory ";
+                result.append(match.str(1).c_str());
+            }
+            break;
+        case 14: //rm -r []
+            if (std::regex_search(s.begin(), s.end(), match, format)) {
+                result = "remove directory (and contents recursivly) ";
+                result.append(match.str(1).c_str());
+            }
+            break;
+        case 15: //clear
+            clear();
+            break;
+        case 16: //help
+            result = "help message ";
+            break;
+        case 17: //exit
+            exit(0);
+    }
+    return result;
 }
 
 void QConsole::printCommandExecutionResults(const QString &result, ResultType type) {
