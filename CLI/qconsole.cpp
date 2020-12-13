@@ -242,7 +242,7 @@ void QConsole::initCommands() {
     commands.append("cat +([^>+ ]*) *>> *(([^>+]|\n)*)");         // cat [filename] >> [content]
     commands.append("echo +'([^']+)' +> (.+)");                 // echo [content] > [filename]
     commands.append("printf +'(.+)' +(.+)");                    // printf [content] [filename]
-    commands.append("edit");                                    // edit [filename]
+    commands.append("edit +(.+)");                                    // edit [filename]
     commands.append("rm +([^-]+)");                              // rm [filename]
     commands.append("mkdir +(.+)");                              // mkdir [dirname]
     commands.append("rmdir +(.+)");                              // rmdir [dirname]
@@ -334,15 +334,15 @@ void QConsole::handleReturnKeyPress() {
     //Get the command to validate
     QString command = getCurrentCommand();
     //execute the command and get back its text result and its return value
-    if (isCommandComplete(command))
+    if (isCommandComplete(command) && !multiline)
         pExecCommand(command);
     else if (multiline && command.isEmpty()) {
-        multilineCommand = multilineCommand.remove(QRegExp("\\\\\n"));
+        multilineCommand = multilineCommand.remove(QRegExp("\\\\"));
+        multilineCommand = multilineCommand.remove(QRegExp("\n"));
         pExecCommand(multilineCommand);
         multiline = false;
     } else {
         multilineCommand.append(command);
-        multilineCommand.append("\n");
         append("");
         moveCursor(QTextCursor::EndOfLine);
     }
@@ -447,6 +447,9 @@ void QConsole::keyPressEvent(QKeyEvent *e) {
 
     } else if ((e->modifiers() & Qt::ControlModifier) && (e->key() == Qt::Key_D)) {
         if (isSelectionInEditionZone()) {
+            if (!editing) {
+                handleReturnKeyPress();
+            }
             editing = false;
             QTextCursor cur = textCursor();
             cur.movePosition(QTextCursor::Start);
@@ -548,10 +551,12 @@ bool QConsole::isCommandComplete(const QString &command) {
         multiline_col = textCursor().columnNumber();
         multiline_row = textCursor().blockNumber();
         editing = true;
+        return false;
     } else if (std::regex_match(command.toStdString().c_str(), std::regex(".* \\\\"))) {
         multiline = true;
+        return false;
     }
-    return !editing;
+    return true;
 
 }
 
@@ -678,9 +683,13 @@ QString QConsole::processCommand(const QString &command, int id) {
         case 3: //cd []
             if (std::regex_search(s.begin(), s.end(), match, format)) {
                 char *new_dir = strdup(match.str(1).c_str());
-                change_directory(new_dir);
+                int errno_ = change_directory(new_dir);
+                if (errno_ == 1) {
+                    result.append("Path doesn't exist");
+                } else {
+                    setPrompt(new_dir, false);
+                }
                 free(new_dir);
-                result.append(match.str(1).c_str());
             }
             break;
         case 4: //touch []
@@ -807,7 +816,7 @@ void QConsole::printCommandExecutionResults(const QString &result, ResultType ty
     append(result);
     //Display the prompt again
     if (type == ResultType::Complete || type == ResultType::Error) {
-        if (!result.endsWith("\n"))
+        if (!result.endsWith("\n") && !result.isEmpty())
             append("");
 
         isLocked = false;
