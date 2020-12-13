@@ -11,10 +11,10 @@ extern "C" {
 int main(int argc, char *argv[]) {
     QApplication a(argc, argv);
 
-    struct Drive *drive = createDrive("drive.vsfs", 104857600, 64, 1000, "jassonrm");
+    struct Drive *drive = createDrive("drive.vsfs", 104857600, 64, 1000, "root");
     checkIntegrity("drive.vsfs");
     set_working_drive(drive);
-    set_current_user("jassonrm");
+    set_current_user("root");
 
 //    struct FileDescriptor *fd;
 //    char number[4];

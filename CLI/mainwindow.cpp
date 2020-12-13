@@ -14,7 +14,8 @@ MainWindow::MainWindow(QWidget *parent)
     console->setBackgroundColor(QColor(43, 43, 43));
     console->setErrColor(QColor(255, 85, 85));
     console->setCmdColor(QColor(169, 183, 198));
-    console->setOutColor(QColor(80, 250, 123));
+//    console->setOutColor(QColor(80, 250, 123));
+    console->setOutColor(QColor(169, 183, 198));
     console->setPathColor(QColor(98, 114, 164));
     console->setUserColor(QColor(97, 150, 71));
     console->setUsername("root");

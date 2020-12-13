@@ -12,7 +12,6 @@
 
 #include "qconsole.h"
 #include <QFile>
-#include <QTextStream>
 #include <QDebug>
 #include <QVBoxLayout>
 #include <QApplication>
@@ -21,6 +20,7 @@
 #include <regex>
 #include <QKeySequence>
 #include <QtGui/QTextDocumentFragment>
+#include <algorithm>
 
 extern "C" {
 #include "../FileSystem/FileManagement/FileRW.h"
@@ -232,24 +232,24 @@ QConsole::QConsole(QWidget *parent, const QString &welcomeText)
 }
 
 void QConsole::initCommands() {
-    commands.append("su +-l +(.+)");                              // su -l [username]
-    commands.append("su *");                                    // su
-    commands.append("ls +(.*)|ls *");                            // ls [path]
-    commands.append("cd +(.+)|cd *");                            // cd [path]
-    commands.append("touch +(.+)");                              // touch [filename]
+    commands.append("su +-l +(.+)");                                // su -l [username]
+    commands.append("su *");                                        // su
+    commands.append("ls +(.*)|ls *");                               // ls [path]
+    commands.append("cd +(.+)|cd *");                               // cd [path]
+    commands.append("touch +(.+)");                                 // touch [filename]
     commands.append("cat +([^>+ ]*) *");                            // cat [filename]
-    commands.append("cat +([^>+ ]*) *> *(([^>+]|\n)*)");          // cat [filename] > [content]
-    commands.append("cat +([^>+ ]*) *>> *(([^>+]|\n)*)");         // cat [filename] >> [content]
-    commands.append("echo +'([^']+)' +> (.+)");                 // echo [content] > [filename]
-    commands.append("printf +'(.+)' +(.+)");                    // printf [content] [filename]
-    commands.append("edit +(.+)");                                    // edit [filename]
-    commands.append("rm +([^-]+)");                              // rm [filename]
-    commands.append("mkdir +(.+)");                              // mkdir [dirname]
-    commands.append("rmdir +(.+)");                              // rmdir [dirname]
-    commands.append("rm +-r +(.+)");                              // rm -r [dirname]
-    commands.append("clear *");                                 // clear
-    commands.append("help *");                                  // help
-    commands.append("exit *");                                  // help
+    commands.append("cat +([^>+ ]*) *> *(([^>+]|\n)*)");            // cat [filename] > [content]
+    commands.append("cat +([^>+ ]*) *>> *(([^>+]|\n)*)");           // cat [filename] >> [content]
+    commands.append("echo +'([^']+)' +> (.+)");                     // echo [content] > [filename]
+    commands.append("printf +'(.+)' +(.+)");                        // printf [content] [filename]
+    commands.append("edit +([^ ]*) *\n *((.+|\n)*)");                   // edit [filename]
+    commands.append("rm +([^-]+)");                                 // rm [filename]
+    commands.append("mkdir +(.+)");                                 // mkdir [dirname]
+    commands.append("rmdir +(.+)");                                 // rmdir [dirname]
+    commands.append("rm +-r +(.+)");                                // rm -r [dirname]
+    commands.append("clear *");                                     // clear
+    commands.append("help *");                                      // help
+    commands.append("exit *");                                      // help
 }
 
 //Sets the prompt and cache the prompt length to optimize the processing speed
@@ -547,10 +547,18 @@ void QConsole::replaceCurrentCommand(const QString &newCommand) {
 //default implementation: command always complete
 bool QConsole::isCommandComplete(const QString &command) {
     if (std::regex_match(command.toStdString().c_str(),
-                         std::regex("cat +([^>+ ]*) *>{1,2} *(([^>+]|\n)*)|edit (.*)"))) {
+                         std::regex("cat +([^>+ ]*) *>{1,2} *(([^>+]|\n)*)|edit +([^ ]*) *"))) {
         multiline_col = textCursor().columnNumber();
         multiline_row = textCursor().blockNumber();
         editing = true;
+        std::smatch match;
+        const std::string s = command.toStdString();
+        if (std::regex_search(s.begin(), s.end(), match, std::regex("edit +([^ ]*) *"))) {
+            char *file = strdup(match.str(1).c_str());
+            FileDescriptor *fd = open_file(file);
+            seek(fd, 0);
+            append(QString(read_file(fd)));
+        }
         return false;
     } else if (std::regex_match(command.toStdString().c_str(), std::regex(".* \\\\"))) {
         multiline = true;
@@ -633,8 +641,7 @@ void QConsole::pExecCommand(const QString &command) {
         printCommandExecutionResults(errMsg, result);
     } else {
         QString output = processCommand(command, id);
-        if (id != 10)
-            printCommandExecutionResults(output, result);
+        printCommandExecutionResults(output, result);
     }
 
     emit execCommand(command);
@@ -682,120 +689,288 @@ QString QConsole::processCommand(const QString &command, int id) {
             break;
         case 3: //cd []
             if (std::regex_search(s.begin(), s.end(), match, format)) {
-                char *new_dir = strdup(match.str(1).c_str());
+                std::string path = match.str(1).append("/");
+                char *new_dir = strdup(path.c_str());
                 int errno_ = change_directory(new_dir);
                 if (errno_ == 1) {
                     result.append("Path doesn't exist");
-                } else {
+                } else if (path == "/") {
                     setPrompt(new_dir, false);
+                } else {
+                    std::string old_path = prompt.toStdString();
+                    std::string delimiter = "/";
+                    size_t pos = 0;
+                    std::string token;
+                    QStringList pathElements;
+                    while ((pos = old_path.find(delimiter)) != std::string::npos) {
+                        token = old_path.substr(0, pos);
+                        pathElements.append(QString(token.c_str()));
+                        old_path.erase(0, pos + delimiter.length());
+                    }
+
+                    pos = 0;
+                    while ((pos = path.find(delimiter)) != std::string::npos) {
+                        token = path.substr(0, pos);
+                        if (token == "..")
+                            pathElements.pop_back();
+                        else
+                            pathElements.append(QString(token.c_str()));
+                        path.erase(0, pos + delimiter.length());
+                    }
+                    QString new_prompt = "";
+                    for (QString element : pathElements) {
+                        new_prompt.append(element);
+                        new_prompt.append("/");
+                    }
+                    new_prompt.remove(-1);
+                    setPrompt(new_prompt, false);
                 }
                 free(new_dir);
             }
             break;
         case 4: //touch []
-            if (std::regex_search(s.begin(), s.end(), match, format)) {
+            if (
+                    std::regex_search(s
+                                              .
+
+                                                      begin(), s
+
+                                              .
+
+                                                      end(), match, format
+
+                    )) {
                 char *new_file = strdup(match.str(1).c_str());
                 open_file(new_file);
                 free(new_file);
-                result.append(match.str(1).c_str());
             }
             break;
         case 5: //cat []
-            if (std::regex_search(s.begin(), s.end(), match, format)) {
+            if (
+                    std::regex_search(s
+                                              .
+
+                                                      begin(), s
+
+                                              .
+
+                                                      end(), match, format
+
+                    )) {
                 char *file = strdup(match.str(1).c_str());
                 FileDescriptor *fd = open_file(file);
-                seek(fd, 0);
-                result.append(QString(read_file(fd)));
+                seek(fd,
+                     0);
+                result.
+                        append(QString(read_file(fd))
+                );
             }
             break;
         case 6: //cat [] > []
-            if (std::regex_search(s.begin(), s.end(), match, format)) {
+            if (
+                    std::regex_search(s
+                                              .
+
+                                                      begin(), s
+
+                                              .
+
+                                                      end(), match, format
+
+                    )) {
                 char *file = strdup(match.str(1).c_str());
                 FileDescriptor *fd = open_file(file);
                 char *content = strdup(match.str(2).c_str());
-                write_file(fd, content, match.str(2).length() + 1);
+                write_file(fd, content, match
+                                                .str(2).
+
+                        length()
+
+                                        + 1);
             }
             break;
         case 7: //cat [] >> []
-            if (std::regex_search(s.begin(), s.end(), match, format)) {
-                result = "append to file ";
-                result.append(match.str(1).c_str());
-                result.append(match.str(2).c_str());
+            if (
+                    std::regex_search(s
+                                              .
+
+                                                      begin(), s
+
+                                              .
+
+                                                      end(), match, format
+
+                    )) {
+                char *file = strdup(match.str(1).c_str());
+                FileDescriptor *fd = open_file(file);
+                seek(fd,
+                     0);
+                std::string content = read_file(fd);
+                content.
+                        append(match
+                                       .str(2));
+                char *new_content = strdup(content.c_str());
+                write_file(fd, new_content, content
+                                                    .
+
+                                                            length()
+
+                                            + match.str(2).
+
+                        length()
+
+                                            + 1);
             }
             break;
         case 8: //echo [] > []
-            if (std::regex_search(s.begin(), s.end(), match, format)) {
-                result = "write to file ";
-                result.append(match.str(2).c_str());
-                result.append(match.str(1).c_str());
+            if (
+                    std::regex_search(s
+                                              .
+
+                                                      begin(), s
+
+                                              .
+
+                                                      end(), match, format
+
+                    )) {
+                char *file = strdup(match.str(2).c_str());
+                FileDescriptor *fd = open_file(file);
+                char *content = strdup(match.str(1).c_str());
+                write_file(fd, content, match
+                                                .str(1).
+
+                        length()
+
+                                        + 1);
             }
             break;
         case 9: //printf [] []
-            if (std::regex_search(s.begin(), s.end(), match, format)) {
-                result = "write to file ";
-                result.append(match.str(2).c_str());
-                result.append(match.str(1).c_str());
+            if (
+                    std::regex_search(s
+                                              .
+
+                                                      begin(), s
+
+                                              .
+
+                                                      end(), match, format
+
+                    )) {
+                char *file = strdup(match.str(2).c_str());
+                FileDescriptor *fd = open_file(file);
+                char *content = strdup(match.str(1).c_str());
+                write_file(fd, content, match
+                                                .str(1).
+
+                        length()
+
+                                        + 1);
             }
             break;
-        case 10: //edit []
-        {
-            QString filename;
-            QString text = "";
-            append(text);
-            editing = true;
-            isLocked = false;
+        case 10: //edit [] []
+            if (
+                    std::regex_search(s
+                                              .
+
+                                                      begin(), s
+
+                                              .
+
+                                                      end(), match, format
+
+                    )) {
+                char *file = strdup(match.str(1).c_str());
+                FileDescriptor *fd = open_file(file);
+                char *content = strdup(match.str(2).c_str());
+                write_file(fd, content, match
+                                                .str(2).
+
+                        length()
+
+                                        + 1);
+            }
             break;
-        }
         case 11: //rm []
-            if (std::regex_search(s.begin(), s.end(), match, format)) {
-//                result = "remove file ";
+            if (
+                    std::regex_search(s
+                                              .
+
+                                                      begin(), s
+
+                                              .
+
+                                                      end(), match, format
+
+                    )) {
                 char *file = strdup(match.str(1).c_str());
                 int errno_ = delete_(file);
                 free(file);
                 if (errno_ == 1) {
                     result.append("Path doesn't exist");
-                } else {
-                    result.append(match.str(1).c_str());
                 }
             }
             break;
         case 12: //mkdir []
-            if (std::regex_search(s.begin(), s.end(), match, format)) {
-                result = "create directory ";
+            if (
+                    std::regex_search(s
+                                              .
+
+                                                      begin(), s
+
+                                              .
+
+                                                      end(), match, format
+
+                    )) {
                 char *new_dir = strdup(match.str(1).c_str());
                 create_dir(new_dir);
                 free(new_dir);
-                result.append(match.str(1).c_str());
             }
             break;
         case 13: //rmdir []
-            if (std::regex_search(s.begin(), s.end(), match, format)) {
-//                result = "remove empty directory ";
+            if (
+                    std::regex_search(s
+                                              .
+
+                                                      begin(), s
+
+                                              .
+
+                                                      end(), match, format
+
+                    )) {
                 char *file = strdup(match.str(1).c_str());
                 int errno_ = delete_(file);
                 if (errno_ == 1) {
                     result.append("Path doesn't exist");
-                } else {
-                    result.append(match.str(1).c_str());
                 }
                 free(file);
             }
             break;
         case 14: //rm -r []
-            if (std::regex_search(s.begin(), s.end(), match, format)) {
-//                result = "remove directory (and contents recursivly) ";
+            if (
+                    std::regex_search(s
+                                              .
+
+                                                      begin(), s
+
+                                              .
+
+                                                      end(), match, format
+
+                    )) {
                 char *file = strdup(match.str(1).c_str());
                 int errno_ = delete_(file);
                 if (errno_ == 1) {
                     result.append("Path doesn't exist");
-                } else {
-                    result.append(match.str(1).c_str());
                 }
                 free(file);
             }
             break;
         case 15: //clear
             clear();
+
             break;
         case 16: //help
             result = "help message ";
@@ -803,7 +978,9 @@ QString QConsole::processCommand(const QString &command, int id) {
         case 17: //exit
             exit(0);
     }
-    return result;
+
+    return
+            result;
 }
 
 void QConsole::printCommandExecutionResults(const QString &result, ResultType type) {

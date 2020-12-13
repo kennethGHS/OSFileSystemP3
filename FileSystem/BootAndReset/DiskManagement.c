@@ -19,7 +19,7 @@ int resetDrive(char *filename) {
 };
 
 struct Drive *createDrive(char filename[256], int size, int block_size, int inode_count, char username[32]) {
-    int first_block = sizeof(struct Superblock) + 4 + inode_count * sizeof(struct iNode);
+    int first_block = sizeof(struct Superblock) + inode_count * sizeof(struct iNode);
     int block_count = (size - first_block) / block_size;
 
     time_t raw_time;
@@ -45,7 +45,7 @@ struct Drive *createDrive(char filename[256], int size, int block_size, int inod
     memcpy(drive->superblock.filename, filename, 256);
     memcpy(drive->root.filename, "root", 256);
     memcpy(drive->root.owner, username, 32);
-    for(int i = 0; i < 15; i++){
+    for (int i = 0; i < 15; i++) {
         drive->root.blocks[i] = 0;
     }
 
