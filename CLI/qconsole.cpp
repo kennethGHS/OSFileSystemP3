@@ -874,13 +874,18 @@ void QConsole::printCommandExecutionResults(const QString &result, ResultType ty
 
 void QConsole::showFiles(QList<QPair<type_t, QPair<QString, time_t>>> elements) {
     //TODO Readonly
+    append("");
     for (QPair<type_t, QPair<QString, time_t>> element : elements) {
         if (element.first == FILE_START) {
             setTextColor(cmdColor_);
         } else if (element.first == DIRECTORY_START) {
             setTextColor(Qt::cyan);
         }
-        append(element.second.first);
+        insertPlainText(element.second.first);
+        insertPlainText("\t");
+        setTextColor(cmdColor_);
+        struct tm *modified = localtime(&(element.second.second));
+        insertPlainText(asctime(modified));
     }
 }
 
