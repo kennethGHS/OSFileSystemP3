@@ -1,0 +1,127 @@
+{
+  "file_name" : "root",
+  "type" : "folder",
+  "owner" : "Juan",
+  "modify_date": "23/23/1223",
+  "created_date" : "45/341/64",
+  "size" : "453245",
+  "inode_owner" : "12",
+  "inode_num" : "0",
+  "files" : [
+    {
+  "file_name" : "folder1",
+  "type" : "folder",
+  "owner" : "Marcantonio",
+  "modify_date": "23/23/1223",
+  "created_date" : "45/341/64",
+  "size" : "2355",
+  "inode_owner" : "12",
+  "inode_num" : "0",
+  "files" : [
+        {
+  "file_name" : "folder2",
+  "type" : "folder",
+  "owner" : "Marcantonio",
+  "modify_date": "23/23/1223",
+  "created_date" : "45/341/64",
+  "size" : "4643",
+  "inode_owner" : "12",
+  "inode_num" : "0",
+  "files" : []
+
+
+},         {
+  "file_name" : "folder2",
+  "type" : "folder",
+  "owner" : "Marcantonio",
+  "modify_date": "23/23/1223",
+  "created_date" : "45/341/64",
+  "size" : "4643",
+  "inode_owner" : "12",
+  "inode_num" : "0",
+  "files" : []
+
+
+},        {
+  "file_name" : "folder2",
+  "type" : "folder",
+  "owner" : "Marcantonio",
+  "modify_date": "23/23/1223",
+  "created_date" : "45/341/64",
+  "size" : "4643",
+  "inode_owner" : "12",
+  "inode_num" : "0",
+  "files" : []
+
+
+},   {
+  "file_name" : "folder3",
+  "type" : "folder",
+  "owner" : "Marcantonio",
+  "modify_date": "23/23/1223",
+  "created_date" : "45/341/64",
+  "size" : "346664",
+  "inode_owner" : "12",
+  "inode_num" : "0",
+  "files" : []
+
+
+},
+   {
+  "file_name" : "folder3",
+  "type" : "folder",
+  "owner" : "Marcantonio",
+  "modify_date": "23/23/1223",
+  "created_date" : "45/341/64",
+  "size" : "346664",
+  "inode_owner" : "12",
+  "inode_num" : "0",
+  "files" : []
+
+
+},
+   {
+  "file_name" : "folder3",
+  "type" : "folder",
+  "owner" : "Marcantonio",
+  "modify_date": "23/23/1223",
+  "created_date" : "45/341/64",
+  "size" : "346664",
+  "inode_owner" : "12",
+  "inode_num" : "0",
+  "files" : []
+
+
+}]
+
+
+},
+        {
+  "file_name" : "json.txt",
+  "type" : "file",
+  "owner" : "Carlos",
+  "modify_date": "23/23/1223",
+  "created_date" : "45/341/64",
+  "size" : "35345",
+  "inode_owner" : "12",
+  "inode_num" : "0",
+  "files" : [
+  ]
+
+
+},
+        {
+  "file_name" : "json2.txt",
+  "type" : "file",
+  "owner" : "Maria",
+  "modify_date": "23/23/1223",
+  "created_date" : "45/341/64",
+  "size" : "34662",
+  "inode_owner" : "12",
+  "inode_num" : "0",
+  "files" : []
+
+
+}
+    ]
+}
