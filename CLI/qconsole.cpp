@@ -20,6 +20,7 @@
 #include <QDesktopWidget>
 #include <regex>
 #include <QKeySequence>
+#include <QtGui/QTextDocumentFragment>
 
 extern "C" {
 #include "../FileSystem/FileManagement/FileRW.h"
@@ -326,6 +327,10 @@ void QConsole::handleTabKeyPress() {
 
 // If return pressed, do the evaluation and append the result
 void QConsole::handleReturnKeyPress() {
+    if (editing) {
+        append("");
+        return;
+    }
     //Get the command to validate
     QString command = getCurrentCommand();
     //execute the command and get back its text result and its return value
@@ -336,9 +341,9 @@ void QConsole::handleReturnKeyPress() {
         pExecCommand(multilineCommand);
         multiline = false;
     } else {
-        append("");
         multilineCommand.append(command);
         multilineCommand.append("\n");
+        append("");
         moveCursor(QTextCursor::EndOfLine);
     }
 }
@@ -443,6 +448,12 @@ void QConsole::keyPressEvent(QKeyEvent *e) {
     } else if ((e->modifiers() & Qt::ControlModifier) && (e->key() == Qt::Key_D)) {
         if (isSelectionInEditionZone()) {
             editing = false;
+            QTextCursor cur = textCursor();
+            cur.movePosition(QTextCursor::Start);
+            cur.movePosition(QTextCursor::Down, QTextCursor::MoveAnchor, multiline_row);
+            cur.movePosition(QTextCursor::Right, QTextCursor::MoveAnchor, multiline_col);
+            cur.movePosition(QTextCursor::End, QTextCursor::KeepAnchor);
+            multilineCommand.append(cur.selection().toPlainText());
             pExecCommand(multilineCommand);
             multilineCommand.clear();
             return;
@@ -532,7 +543,10 @@ void QConsole::replaceCurrentCommand(const QString &newCommand) {
 
 //default implementation: command always complete
 bool QConsole::isCommandComplete(const QString &command) {
-    if (std::regex_match(command.toStdString().c_str(), std::regex("cat .*>{1,2}.*"))) {
+    if (std::regex_match(command.toStdString().c_str(),
+                         std::regex("cat +([^>+ ]*) *>{1,2} *(([^>+]|\n)*)|edit (.*)"))) {
+        multiline_col = textCursor().columnNumber();
+        multiline_row = textCursor().blockNumber();
         editing = true;
     } else if (std::regex_match(command.toStdString().c_str(), std::regex(".* \\\\"))) {
         multiline = true;
@@ -613,7 +627,9 @@ void QConsole::pExecCommand(const QString &command) {
         errMsg.append(": Command not found");
         printCommandExecutionResults(errMsg, result);
     } else {
-        printCommandExecutionResults(processCommand(command, id), result);
+        QString output = processCommand(command, id);
+        if (id != 10)
+            printCommandExecutionResults(output, result);
     }
 
     emit execCommand(command);
@@ -713,7 +729,14 @@ QString QConsole::processCommand(const QString &command, int id) {
             }
             break;
         case 10: //edit []
+        {
+            QString filename;
+            QString text = "";
+            append(text);
+            editing = true;
+            isLocked = false;
             break;
+        }
         case 11: //rm []
             if (std::regex_search(s.begin(), s.end(), match, format)) {
 //                result = "remove file ";

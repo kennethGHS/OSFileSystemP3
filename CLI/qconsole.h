@@ -218,7 +218,7 @@ protected:
     QStringList commands;
     bool editing, multiline;
     QString multilineCommand;
-
+    int multiline_row, multiline_col;
 protected:
     //Implement paste with middle mouse button
     void mousePressEvent(QMouseEvent *);
