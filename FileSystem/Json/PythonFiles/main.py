@@ -2,6 +2,7 @@
 
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+import argparse
 from time import sleep
 
 from PyQt5.QtCore import Qt
@@ -20,9 +21,13 @@ def print_hi(name):
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('path')
+    args = parser.parse_args()
+
     app = QApplication([])
     app2 = MainWindow("xd")
-    file = parse_json_file("/home/kenneth/Desktop/OSFileSystemP3/FileSystem/cmake-build-debug/hola.txt")
+    file = parse_json_file(args.path)
     app2.root = file
     app2.set_directory_interface(app2.root,["/"])
     file.print_attributes()

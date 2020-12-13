@@ -23,6 +23,7 @@ def get_file_from_data(data):
 
 
 def parse_json_file(filename):
+    print("Current dir:" + filename)
     file = open(filename, "r")
     data = json.load(file)
     print(type(data))
