@@ -257,7 +257,9 @@ void QConsole::initCommands() {
     commands.append("chown +(.+) +(.+)");                           // chown [user] [filename]
     commands.append("mount +(.+) +(\\d+) +(\\d+) *");               // mount [drive] [size] [block size]
     commands.append("ls +-l +(.+) *");                              // ls -l [filename]
-    commands.append("chmod +(\\d+) +(.+) *");                         // chmod 0444 [filename]
+    commands.append("chmod +(\\d+) +(.+) *");                       // chmod [state] [filename]
+    commands.append("mount +(.+) *");                               // mount [drivename]
+
 
 }
 
@@ -852,7 +854,10 @@ QString QConsole::processCommand(const QString &command, int id) {
 
             break;
         case 16: //help
-            result = "help message ";
+            result = "su\nsu -l [username]\nls [path]\nls -l [filename]\nvs -f\ncd [path]\ntouch [filename]\ncat [filename]\ncat [filename] > [content]\ncat [filename] >> [content]\necho [content] > [filename]\nprintf [content] [filename]\nedit [filename]\nrm [filename]\n";
+            result.append(
+                    "mkdir [dirname]\nrmdir [dirname]\nrm -r [dirname]\nmv [filename] [filename]\nmount [drive]\nmount [drive] [size] [block size]\nchown [user] [filename]\nchmod [state] [filename]\nclear\nhelp\nexit");
+
             break;
         case 17: //exit
             exit(0);
@@ -912,6 +917,17 @@ QString QConsole::processCommand(const QString &command, int id) {
                 int state = atoi(match.str(1).c_str());
                 char *filename = strdup(match.str(2).c_str());
                 set_read_only(filename, state);
+            }
+            break;
+        case 24: // mount []
+            if (std::regex_search(s.begin(), s.end(), match, format)) {
+                char *filename = strdup(match.str(1).c_str());
+                struct Drive *drive = loadDrive(filename);
+                if (drive == NULL)
+                    result = "Drive not found";
+                else
+                    set_working_drive(drive);
+
             }
             break;
     }

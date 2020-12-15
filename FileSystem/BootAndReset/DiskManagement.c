@@ -72,7 +72,7 @@ struct Drive *loadDrive(char filename[256]){
         fclose(fp);
         return drive;
     }
-    return 1;
+    return NULL;
 }
 
 int checkIntegrity(char filename[256]) {
