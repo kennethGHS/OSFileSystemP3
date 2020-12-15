@@ -44,4 +44,8 @@ int rename_file(char *filename, char *new_name);
 
 int change_owner(char *filename, char *new_owner);
 
+struct iNode *get_attributes(char *filename);
+
+int set_read_only(char *filename, int state);
+
 #endif //FILESYSTEM_FILERW_H

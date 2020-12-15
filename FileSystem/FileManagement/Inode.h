@@ -20,6 +20,7 @@ struct iNode {
     char filename[256];
     enum type_t type;
     char owner[32];
+    int read_only;
     time_t modified_datetime;
     time_t created_datetime;
     unsigned long size;
@@ -27,5 +28,6 @@ struct iNode {
     unsigned long iNode_parent;
     unsigned long blocks[15];
 };
+
 
 #endif //FILESYSTEM_INODESTRUCT_H
