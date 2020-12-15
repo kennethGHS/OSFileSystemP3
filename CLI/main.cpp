@@ -11,8 +11,8 @@ extern "C" {
 int main(int argc, char *argv[]) {
     QApplication a(argc, argv);
 
-    struct Drive *drive = createDrive("drive.vsfs", 104857600, 64, 1000, "root");
-    checkIntegrity("drive.vsfs");
+    struct Drive *drive = createDrive("default.vsfs", 104857600, 64, 1000, "root");
+    checkIntegrity("default.vsfs");
     set_working_drive(drive);
     set_current_user("root");
     MainWindow w;

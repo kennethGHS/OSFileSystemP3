@@ -24,6 +24,8 @@
 
 extern "C" {
 #include "../FileSystem/FileManagement/FileRW.h"
+#include "../FileSystem/Json/json_creation.h"
+#include "../FileSystem/BootAndReset/DiskManagement.h"
 }
 
 //#define USE_POPUP_COMPLETER
@@ -234,7 +236,7 @@ QConsole::QConsole(QWidget *parent, const QString &welcomeText)
 void QConsole::initCommands() {
     commands.append("su +-l +(.+)");                                // su -l [username]
     commands.append("su *");                                        // su
-    commands.append("ls *(-d)? +(.*)|ls *(-d)? *");                 // ls [path]
+    commands.append("ls *(-d)? +([^-]*)|ls *(-d)? *");              // ls [path]
     commands.append("cd +(.+)|cd *");                               // cd [path]
     commands.append("touch +(.+)");                                 // touch [filename]
     commands.append("cat +([^>+ ]*) *");                            // cat [filename]
@@ -249,7 +251,14 @@ void QConsole::initCommands() {
     commands.append("rm +-r +(.+)");                                // rm -r [dirname]
     commands.append("clear *");                                     // clear
     commands.append("help *");                                      // help
-    commands.append("exit *");                                      // help
+    commands.append("exit *");                                      // exit
+    commands.append("vs +-f +*");                                   // vs
+    commands.append("mv +(.+) +(.+)");                              // mv [filename] [filename]
+    commands.append("chown +(.+) +(.+)");                           // chown [user] [filename]
+    commands.append("mount +(.+) +(\\d+) +(\\d+) *");               // mount [drive] [size] [block size]
+    commands.append("ls +-l +(.+) *");                              // ls -l [filename]
+    commands.append("chmod +(\\d+) +(.+) *");                         // chmod 0444 [filename]
+
 }
 
 //Sets the prompt and cache the prompt length to optimize the processing speed
@@ -680,11 +689,12 @@ QString QConsole::processCommand(const QString &command, int id) {
                     root = list_directories(temp_path);
                 int i = 0;
                 while (root[i].type != EMPTY) {
-                    struct tm *modified = localtime(&(root[i].modified_datetime));
                     QPair<QString, time_t> temp = QPair<QString, time_t>(QString(root[i].filename),
                                                                          root[i].modified_datetime);
-
-                    elements.append(QPair<type_t, QPair<QString, time_t>>(root[i].type, temp));
+                    if (root[i].read_only)
+                        elements.append(QPair<type_t, QPair<QString, time_t>>(READ_ONLY, temp));
+                    else
+                        elements.append(QPair<type_t, QPair<QString, time_t>>(root[i].type, temp));
                     i++;
                 }
                 if (std::regex_search(s.begin(), s.end(), match, std::regex(".*-(.).*"))) {
@@ -846,6 +856,64 @@ QString QConsole::processCommand(const QString &command, int id) {
             break;
         case 17: //exit
             exit(0);
+        case 18: // vs -f
+        {
+            char temp[] = "./temp.txt";
+            generate_and_run_interface(temp);
+            break;
+        }
+        case 19: // mv [] []
+            if (std::regex_search(s.begin(), s.end(), match, format)) {
+
+                char *old_name = strdup(match.str(1).c_str());
+                char *new_name = strdup(match.str(2).c_str());
+                rename_file(old_name, new_name);
+            }
+            break;
+        case 20: // chown [] []
+            if (std::regex_search(s.begin(), s.end(), match, format)) {
+
+                char *user = strdup(match.str(1).c_str());
+                char *filename = strdup(match.str(2).c_str());
+                change_owner(filename, user);
+            }
+            break;
+        case 21: // mount [] [] []
+            if (std::regex_search(s.begin(), s.end(), match, format)) {
+
+                char *drive_name = strdup(match.str(1).c_str());
+                int size = atoi(match.str(2).c_str()); //104857600
+                int block_size = atoi(match.str(3).c_str()); //64
+                struct Drive *drive = createDrive(drive_name, size, block_size, 1000, "root");
+                checkIntegrity(drive_name);
+                set_working_drive(drive);
+            }
+            break;
+        case 22: // ls -l []
+            if (std::regex_search(s.begin(), s.end(), match, format)) {
+                char *filename = strdup(match.str(1).c_str());
+                iNode *node = get_attributes(filename);
+                if (node != NULL) {
+                    result = QString("%1\t%2\t%3\t%4\t%5").arg(node->filename, node->owner,
+                                                               QString(asctime(
+                                                                       localtime(&(node->created_datetime)))).trimmed(),
+                                                               QString(asctime(
+                                                                       localtime(
+                                                                               &(node->modified_datetime)))).trimmed(),
+                                                               std::to_string(node->size).c_str());
+                } else {
+                    result = "File not found";
+                }
+
+            }
+            break;
+        case 23: // chmod [] []
+            if (std::regex_search(s.begin(), s.end(), match, format)) {
+                int state = atoi(match.str(1).c_str());
+                char *filename = strdup(match.str(2).c_str());
+                set_read_only(filename, state);
+            }
+            break;
     }
 
     return
@@ -873,13 +941,14 @@ void QConsole::printCommandExecutionResults(const QString &result, ResultType ty
 }
 
 void QConsole::showFiles(QList<QPair<type_t, QPair<QString, time_t>>> elements) {
-    //TODO Readonly
     append("");
     for (QPair<type_t, QPair<QString, time_t>> element : elements) {
         if (element.first == FILE_START) {
             setTextColor(cmdColor_);
         } else if (element.first == DIRECTORY_START) {
             setTextColor(Qt::cyan);
+        } else if (element.first == READ_ONLY) {
+            setTextColor(Qt::red);
         }
         insertPlainText(element.second.first);
         insertPlainText("\t");
@@ -1030,3 +1099,4 @@ bool compareFilesByName(QPair<type_t, QPair<QString, time_t>> file, QPair<type_t
 bool compareFilesByDate(QPair<type_t, QPair<QString, time_t>> file, QPair<type_t, QPair<QString, time_t>> file2) {
     return difftime(file.second.second, file2.second.second) < 0;
 }
+//llamar a kenneth

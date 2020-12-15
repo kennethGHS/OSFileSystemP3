@@ -339,7 +339,7 @@ int write_file(struct FileDescriptor *fileDescriptor, char *data, int size) {
     int pointer;
     int scanned_for_contiguous_space = 0;
 
-    if(fileDescriptor->inode->read_only == 1){
+    if (fileDescriptor->inode->read_only == 1) {
         printf("File or folder is read only.\n");
         return 1;
     }
@@ -663,7 +663,7 @@ static int delete_block(unsigned long index) {
     return 0;
 }
 
-int rename_file(char *filename, char *new_name){
+int rename_file(char *filename, char *new_name) {
     int cur_inode_index = get_inode_index(filename);
     if (cur_inode_index == 0) {
         return 1;
@@ -677,7 +677,7 @@ int rename_file(char *filename, char *new_name){
     return 0;
 }
 
-int change_owner(char *filename, char *new_owner){
+int change_owner(char *filename, char *new_owner) {
     int cur_inode_index = get_inode_index(filename);
     if (cur_inode_index == 0) {
         return 1;
@@ -691,10 +691,10 @@ int change_owner(char *filename, char *new_owner){
     return 0;
 }
 
-struct iNode *get_attributes(char *filename){
+struct iNode *get_attributes(char *filename) {
     int cur_inode_index = get_inode_index(filename);
     if (cur_inode_index == 0) {
-        return 1;
+        return NULL;
     }
     fseek(drive_image, cur_inode_index, SEEK_SET);
     struct iNode *inode = malloc(sizeof(struct iNode));
@@ -702,7 +702,7 @@ struct iNode *get_attributes(char *filename){
     return inode;
 }
 
-int set_read_only(char *filename, int state){
+int set_read_only(char *filename, int state) {
     int cur_inode_index = get_inode_index(filename);
     if (cur_inode_index == 0) {
         return 1;

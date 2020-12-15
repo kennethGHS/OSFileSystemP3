@@ -12,7 +12,8 @@ enum type_t {
     DIRECTORY_START,
     DIRECTORY_EXTENSION,
     FILE_START,
-    FILE_EXTENSION
+    FILE_EXTENSION,
+    READ_ONLY
 };
 
 struct iNode {
