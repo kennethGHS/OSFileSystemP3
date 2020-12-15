@@ -47,6 +47,8 @@ int main() {
     create_dir("prueba1");
     create_dir("prueba2");
     open_file("prueba3");
+
+
     fd = open_file("prueba4");
     list_directories(NULL);
 
@@ -61,15 +63,13 @@ int main() {
 
     write_file(fd, "Prueba!!!", 10);
     seek(fd, 0);
+    rename_file("prueba4", "pruebaX");
+    change_owner("pruebaX", "hello");
+    list_directories(NULL);
+    fd = open_file("pruebaX");
     printf("Lectura: |%s|\n", read_file(fd));
-    generate_and_run_interface("/home/kenneth/test/hola.txt");
+    generate_and_run_interface("/home/jasson/hola.txt");
     delete_fd(fd);
-    list_directories(NULL);
-    change_directory("..");
-    list_directories(NULL);
-//    delete("/1-dir/prueba2");
-    list_directories("/1-dir");
-//    delete("1-dir");
-    list_directories(NULL);
+
     return 0;
 }

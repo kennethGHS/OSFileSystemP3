@@ -40,4 +40,8 @@ static int delete_inode(unsigned long index);
 
 static int delete_block(unsigned long index);
 
+int rename_file(char *filename, char *new_name);
+
+int change_owner(char *filename, char *new_owner);
+
 #endif //FILESYSTEM_FILERW_H

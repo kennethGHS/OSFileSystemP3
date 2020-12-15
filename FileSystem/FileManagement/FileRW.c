@@ -655,3 +655,31 @@ static int delete_block(unsigned long index) {
     fwrite(&empty_block, sizeof(empty_block), 1, drive_image);
     return 0;
 }
+
+int rename_file(char *filename, char *new_name){
+    int cur_inode_index = get_inode_index(filename);
+    if (cur_inode_index == 0) {
+        return 1;
+    }
+    fseek(drive_image, cur_inode_index, SEEK_SET);
+    struct iNode inode;
+    fread(&inode, sizeof(struct iNode), 1, drive_image);
+    memcpy(&(inode.filename), new_name, 256);
+    fseek(drive_image, cur_inode_index, SEEK_SET);
+    fwrite(&inode, sizeof(struct iNode), 1, drive_image);
+    return 0;
+}
+
+int change_owner(char *filename, char *new_owner){
+    int cur_inode_index = get_inode_index(filename);
+    if (cur_inode_index == 0) {
+        return 1;
+    }
+    fseek(drive_image, cur_inode_index, SEEK_SET);
+    struct iNode inode;
+    fread(&inode, sizeof(struct iNode), 1, drive_image);
+    memcpy(&(inode.owner), new_owner, 32);
+    fseek(drive_image, cur_inode_index, SEEK_SET);
+    fwrite(&inode, sizeof(struct iNode), 1, drive_image);
+    return 0;
+}
