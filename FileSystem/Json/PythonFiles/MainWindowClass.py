@@ -24,7 +24,7 @@ class MainWindow(QMainWindow):
         box_layout.addWidget(self.directory_text)
 
 
-        self.back_button.setIcon(QIcon("arrow.png"))
+        self.back_button.setIcon(QIcon("../Json/PythonFiles/arrow.png"))
         self.vbox.addLayout(box_layout)
         self.setStyleSheet("background-color: white;")
         self.current_dir = "/"
@@ -41,7 +41,7 @@ class MainWindow(QMainWindow):
         self.scroll.setWidget(self.widget)
         self.setCentralWidget(self.scroll)
         self.setGeometry(600, 100, 1000, 900)
-        self.setWindowTitle('Scroll Area Demonstration')
+        self.setWindowTitle('File system')
         self.show()
 
         return

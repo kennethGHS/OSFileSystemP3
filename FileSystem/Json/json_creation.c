@@ -114,7 +114,7 @@ struct json_object *parse_directory(char *directory) {
                 currentFile = create_json_(file_name,type,owner,modify_date,created_date,size,inode_owner,inode_num,new_array);
             }
         } else if ((file_list+i)->type==FILE_START){
-            char * type = "fyle";
+            char * type = "file";
             currentFile = create_json_(file_name,type,owner,modify_date,created_date,size,inode_owner,inode_num,json_object_new_array());
         }
         add_to_array(array,currentFile);
