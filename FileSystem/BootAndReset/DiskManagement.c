@@ -10,14 +10,6 @@
 #include "../FileManagement/Inode.h"
 #include "../FileManagement/Block.h"
 
-int bootDrive(char *fileName) {
-    return -1;
-};
-
-int resetDrive(char *filename) {
-    return -1;
-};
-
 struct Drive *createDrive(char filename[256], int size, int block_size, int inode_count, char username[32]) {
     int first_block = sizeof(struct Superblock) + inode_count * sizeof(struct iNode);
     int block_count = (size - first_block) / block_size;
@@ -71,6 +63,17 @@ struct Drive *createDrive(char filename[256], int size, int block_size, int inod
     }
     return NULL;
 };
+
+struct Drive *loadDrive(char filename[256]){
+    FILE *fp = fopen(filename, "rb");
+    if (fp != NULL) {
+        struct Drive *drive = malloc(sizeof(struct Drive));
+        fread(drive, sizeof(struct Drive), 1, fp);
+        fclose(fp);
+        return drive;
+    }
+    return 1;
+}
 
 int checkIntegrity(char filename[256]) {
     FILE *fp = fopen(filename, "rb");
