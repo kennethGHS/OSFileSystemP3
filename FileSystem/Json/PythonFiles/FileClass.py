@@ -16,7 +16,7 @@ class Inode:
         self.modify_date = modify_date
         self.created_date = created_date
         if 1024 < int(size) < 1000000:
-            self.size = str(int(size)/1024)[:len(str(int(size)/1024))-7 ] + " Kb"
+            self.size = str(int(size)/1024)[:len(str(int(size)/1024))-1 ] + " Kb"
         elif int(size) > 1000000:
             self.size = str(int(size)/1000000)[:len(str(int(size)/1000000))-3] + " Mb"
         else:
