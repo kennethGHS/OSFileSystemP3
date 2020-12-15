@@ -234,31 +234,31 @@ QConsole::QConsole(QWidget *parent, const QString &welcomeText)
 }
 
 void QConsole::initCommands() {
-    commands.append("su +-l +(.+)");                                // su -l [username]
+    commands.append("su +-l +([^ ]+) *");                                // su -l [username]
     commands.append("su *");                                        // su
     commands.append("ls *(-d)? +([^-]*)|ls *(-d)? *");              // ls [path]
-    commands.append("cd +(.+)|cd *");                               // cd [path]
-    commands.append("touch +(.+)");                                 // touch [filename]
+    commands.append("cd +([^ ]+) *|cd *");                               // cd [path]
+    commands.append("touch +([^ ]+) *");                                 // touch [filename]
     commands.append("cat +([^>+ ]*) *");                            // cat [filename]
     commands.append("cat +([^>+ ]*) *> *(([^>+]|\n)*)");            // cat [filename] > [content]
     commands.append("cat +([^>+ ]*) *>> *(([^>+]|\n)*)");           // cat [filename] >> [content]
-    commands.append("echo +'([^']+)' +> (.+)");                     // echo [content] > [filename]
-    commands.append("printf +'(.+)' +(.+)");                        // printf [content] [filename]
+    commands.append("echo +'([^']+)' +> ([^ ]+)");                     // echo [content] > [filename]
+    commands.append("printf +'([^ ]+)' +([^ ]+) *");                        // printf [content] [filename]
     commands.append("edit +([^ ]*) *\n *((.+|\n)*)");               // edit [filename]
-    commands.append("rm +([^-]+)");                                 // rm [filename]
-    commands.append("mkdir +(.+)");                                 // mkdir [dirname]
-    commands.append("rmdir +(.+)");                                 // rmdir [dirname]
-    commands.append("rm +-r +(.+)");                                // rm -r [dirname]
+    commands.append("rm +([^-]+) *");                                 // rm [filename]
+    commands.append("mkdir +([^ ]+) *");                                 // mkdir [dirname]
+    commands.append("rmdir +([^ ]+) *");                                 // rmdir [dirname]
+    commands.append("rm +-r +([^ ]+) *");                                // rm -r [dirname]
     commands.append("clear *");                                     // clear
     commands.append("help *");                                      // help
     commands.append("exit *");                                      // exit
-    commands.append("vs +-f +*");                                   // vs
-    commands.append("mv +(.+) +(.+)");                              // mv [filename] [filename]
-    commands.append("chown +(.+) +(.+)");                           // chown [user] [filename]
-    commands.append("mount +(.+) +(\\d+) +(\\d+) *");               // mount [drive] [size] [block size]
-    commands.append("ls +-l +(.+) *");                              // ls -l [filename]
-    commands.append("chmod +(\\d+) +(.+) *");                       // chmod [state] [filename]
-    commands.append("mount +(.+) *");                               // mount [drivename]
+    commands.append("vs +-f *");                                   // vs
+    commands.append("mv +([^ ]+) +([^ ]+) *");                              // mv [filename] [filename]
+    commands.append("chown +([^ ]+) +([^ ]+) *");                           // chown [user] [filename]
+    commands.append("mount +([^ ]+) +(\\d+) +(\\d+) *");               // mount [drive] [size] [block size]
+    commands.append("ls +-l +([^ ]+) *");                              // ls -l [filename]
+    commands.append("chmod +(\\d+) +([^ ]+) *");                       // chmod [state] [filename]
+    commands.append("mount +([^ ]+) *");                               // mount [drivename]
 
 
 }
@@ -344,6 +344,7 @@ void QConsole::handleReturnKeyPress() {
     }
     //Get the command to validate
     QString command = getCurrentCommand();
+    moveCursor(QTextCursor::EndOfLine);
     //execute the command and get back its text result and its return value
     if (isCommandComplete(command) && !multiline)
         pExecCommand(command);
@@ -536,6 +537,7 @@ void QConsole::keyPressEvent(QKeyEvent *e) {
 //Get the current command
 QString QConsole::getCurrentCommand() {
     QTextCursor cursor = textCursor();    //Get the current command: we just remove the prompt
+    cursor.movePosition(QTextCursor::EndOfBlock);
     cursor.movePosition(QTextCursor::StartOfBlock);
     if (!editing and !multiline) {
         cursor.movePosition(QTextCursor::Right, QTextCursor::MoveAnchor, promptLength);
@@ -636,33 +638,37 @@ QString QConsole::addCommandToHistory(const QString &command) {
 //pExecCommand(QString) executes the command and displays back its result
 void QConsole::pExecCommand(const QString &command) {
     isLocked = true;
-    ResultType result = ResultType::Error;
+    bool found = false;
     int id = 0;
     for (QString format: commands) {
         if (std::regex_match(command.toStdString().c_str(), std::regex(format.toStdString().c_str()))) {
-            result = ResultType::Complete;
+            found = true;
             break;
         }
         id += 1;
     }
     addCommandToHistory(command);
-    if (result == ResultType::Error) {
+    if (found) {
+        QString output = processCommand(command, id);
+        printCommandExecutionResults(output, result);
+    } else if (!command.isEmpty()) {
+        result = Error;
         QString errMsg = command;
         errMsg.append(": Command not found");
         printCommandExecutionResults(errMsg, result);
     } else {
-        QString output = processCommand(command, id);
-        printCommandExecutionResults(output, result);
+        isLocked = false;
     }
 
     emit execCommand(command);
 }
 
 QString QConsole::processCommand(const QString &command, int id) {
+    result = Complete;
     const std::string s = command.toStdString();
     std::smatch match;
     std::regex format(commands.at(id).toStdString());
-    QString result;
+    QString result_string;
     switch (id) {
         case 0: //su -l []
             if (std::regex_search(s.begin(), s.end(), match, format)) {
@@ -713,7 +719,8 @@ QString QConsole::processCommand(const QString &command, int id) {
                 char *new_dir = strdup(path.c_str());
                 int errno_ = change_directory(new_dir);
                 if (errno_ == 1) {
-                    result.append("Path doesn't exist");
+                    result = Error;
+                    result_string.append("Path doesn't exist");
                 } else if (path == "/") {
                     setPrompt(new_dir, false);
                 } else {
@@ -761,7 +768,7 @@ QString QConsole::processCommand(const QString &command, int id) {
                 FileDescriptor *fd = open_file(file);
                 seek(fd,
                      0);
-                result.
+                result_string.
                         append(QString(read_file(fd))
                 );
             }
@@ -818,7 +825,8 @@ QString QConsole::processCommand(const QString &command, int id) {
                 int errno_ = delete_(file);
                 free(file);
                 if (errno_ == 1) {
-                    result.append("Path doesn't exist");
+                    result = Error;
+                    result_string.append("Path doesn't exist");
                 }
             }
             break;
@@ -834,7 +842,8 @@ QString QConsole::processCommand(const QString &command, int id) {
                 char *file = strdup(match.str(1).c_str());
                 int errno_ = delete_(file);
                 if (errno_ == 1) {
-                    result.append("Path doesn't exist");
+                    result = Error;
+                    result_string.append("Path doesn't exist");
                 }
                 free(file);
             }
@@ -844,7 +853,8 @@ QString QConsole::processCommand(const QString &command, int id) {
                 char *file = strdup(match.str(1).c_str());
                 int errno_ = delete_(file);
                 if (errno_ == 1) {
-                    result.append("Path doesn't exist");
+                    result = Error;
+                    result_string.append("Path doesn't exist");
                 }
                 free(file);
             }
@@ -854,8 +864,8 @@ QString QConsole::processCommand(const QString &command, int id) {
 
             break;
         case 16: //help
-            result = "su\nsu -l [username]\nls [path]\nls -l [filename]\nvs -f\ncd [path]\ntouch [filename]\ncat [filename]\ncat [filename] > [content]\ncat [filename] >> [content]\necho [content] > [filename]\nprintf [content] [filename]\nedit [filename]\nrm [filename]\n";
-            result.append(
+            result_string = "su\nsu -l [username]\nls [path]\nls -l [filename]\nvs -f\ncd [path]\ntouch [filename]\ncat [filename]\ncat [filename] > [content]\ncat [filename] >> [content]\necho [content] > [filename]\nprintf [content] [filename]\nedit [filename]\nrm [filename]\n";
+            result_string.append(
                     "mkdir [dirname]\nrmdir [dirname]\nrm -r [dirname]\nmv [filename] [filename]\nmount [drive]\nmount [drive] [size] [block size]\nchown [user] [filename]\nchmod [state] [filename]\nclear\nhelp\nexit");
 
             break;
@@ -899,15 +909,17 @@ QString QConsole::processCommand(const QString &command, int id) {
                 char *filename = strdup(match.str(1).c_str());
                 iNode *node = get_attributes(filename);
                 if (node != NULL) {
-                    result = QString("%1\t%2\t%3\t%4\t%5").arg(node->filename, node->owner,
-                                                               QString(asctime(
-                                                                       localtime(&(node->created_datetime)))).trimmed(),
-                                                               QString(asctime(
-                                                                       localtime(
-                                                                               &(node->modified_datetime)))).trimmed(),
-                                                               std::to_string(node->size).c_str());
+                    result_string = QString("%1\t%2\t%3\t%4\t%5").arg(node->filename, node->owner,
+                                                                      QString(asctime(
+                                                                              localtime(
+                                                                                      &(node->created_datetime)))).trimmed(),
+                                                                      QString(asctime(
+                                                                              localtime(
+                                                                                      &(node->modified_datetime)))).trimmed(),
+                                                                      std::to_string(node->size).c_str());
                 } else {
-                    result = "File not found";
+                    result = Error;
+                    result_string = "File not found";
                 }
 
             }
@@ -923,9 +935,10 @@ QString QConsole::processCommand(const QString &command, int id) {
             if (std::regex_search(s.begin(), s.end(), match, format)) {
                 char *filename = strdup(match.str(1).c_str());
                 struct Drive *drive = loadDrive(filename);
-                if (drive == NULL)
-                    result = "Drive not found";
-                else
+                if (drive == NULL) {
+                    result = Error;
+                    result_string = "Drive not found";
+                } else
                     set_working_drive(drive);
 
             }
@@ -933,20 +946,20 @@ QString QConsole::processCommand(const QString &command, int id) {
     }
 
     return
-            result;
+            result_string;
 }
 
-void QConsole::printCommandExecutionResults(const QString &result, ResultType type) {
+void QConsole::printCommandExecutionResults(const QString &result_s, ResultType type) {
     //According to the return value, display the result either in red or in blue
     if (type == ResultType::Error)
         setTextColor(errColor_);
     else
         setTextColor(outColor_);
 
-    append(result);
+    append(result_s);
     //Display the prompt again
     if (type == ResultType::Complete || type == ResultType::Error) {
-        if (!result.endsWith("\n") && !result.isEmpty())
+        if (!result_s.endsWith("\n") && !result_s.isEmpty())
             append("");
 
         isLocked = false;
