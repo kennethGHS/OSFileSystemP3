@@ -69,7 +69,7 @@ void generate_and_run_interface(char *filename) {
 
     fflush(stdout);
     char cmd[200];
-    strcpy(cmd, "python3 ../Json/PythonFiles/main.py ");
+    strcpy(cmd, "python3 ../FileSystem/Json/PythonFiles/main.py ");
     int x = system(strcat(cmd, filename));
     fflush(stdout);
 }

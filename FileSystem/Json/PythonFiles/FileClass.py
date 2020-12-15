@@ -49,12 +49,12 @@ class Inode:
     def reset_labels(self,window):
         if self.type == "folder":
             image = QImage()
-            image.load('../Json/PythonFiles/folder.png')
+            image.load('../FileSystem/Json/PythonFiles/folder.png')
             pixmap = QPixmap.fromImage(image)
             self.label.setPixmap(pixmap)
         else:
             image = QImage()
-            image.load('../Json/PythonFiles/text.png')
+            image.load('../FileSystem/Json/PythonFiles/text.png')
             pixmap = QPixmap.fromImage(image)
             self.label.setPixmap(pixmap)
 

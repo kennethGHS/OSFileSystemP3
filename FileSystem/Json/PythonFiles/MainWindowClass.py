@@ -24,7 +24,7 @@ class MainWindow(QMainWindow):
         box_layout.addWidget(self.directory_text)
 
 
-        self.back_button.setIcon(QIcon("../Json/PythonFiles/arrow.png"))
+        self.back_button.setIcon(QIcon("../FileSystem/Json/PythonFiles/arrow.png"))
         self.vbox.addLayout(box_layout)
         self.setStyleSheet("background-color: white;")
         self.current_dir = "/"
