@@ -12,6 +12,8 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_C_STANDARD 99)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+INCLUDE_DIRECTORIES(/usr/include)
+LINK_DIRECTORIES(/usr/include)
 
 # QtCreator supports the following variables for Android, which are identical to qmake Android variables.
 # Check http://doc.qt.io/qt-5/deployment-android.html for more information.
@@ -52,4 +54,4 @@ else ()
             )
 endif ()
 
-target_link_libraries(CLI PRIVATE Qt5::Widgets)
+target_link_libraries(CLI PRIVATE Qt5::Widgets json-c)
