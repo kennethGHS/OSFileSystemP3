@@ -537,6 +537,10 @@ char *read_file(struct FileDescriptor *fileDescriptor) {
 
     free(inode);
     free(block);
+
+    if(size == 0){
+        return NULL;
+    }
     return data;
 };
 
