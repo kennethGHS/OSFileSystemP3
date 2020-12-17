@@ -62,7 +62,6 @@ static struct iNode *open_inode(char *filename, enum type_t type) {
             cur_filename = next_filename;
             next_filename = strtok(NULL, "/");
             found = 1;
-            break;
         } else {
             for (int i = 0; i < 15; i++) {
                 block_index = current_dir->blocks[i];
@@ -245,7 +244,6 @@ static int get_inode_index(char *filename) {
             cur_filename = next_filename;
             next_filename = strtok(NULL, "/");
             found = 1;
-            break;
         } else {
             for (int i = 0; i < 15; i++) {
                 block_index = current_dir->blocks[i];
