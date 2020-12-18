@@ -344,6 +344,7 @@ void QConsole::handleReturnKeyPress() {
     }
     //Get the command to validate
     QString command = getCurrentCommand();
+    printf("%s\n", command.toStdString().c_str());
     moveCursor(QTextCursor::EndOfLine);
     //execute the command and get back its text result and its return value
     if (isCommandComplete(command) && !multiline)
@@ -461,6 +462,10 @@ void QConsole::keyPressEvent(QKeyEvent *e) {
         if (isSelectionInEditionZone()) {
             if (!editing) {
                 handleReturnKeyPress();
+                editing = false;
+                pExecCommand(multilineCommand);
+                multilineCommand.clear();
+                return;
             }
             editing = false;
             QTextCursor cur = textCursor();
@@ -582,6 +587,7 @@ bool QConsole::isCommandComplete(const QString &command) {
 }
 
 //Tests whether the cursor is in th edition zone or not (after the prompt
+//Tests whether the cursor is in th edition zone or not (after the prompt
 //or in the next lines (in case of multi-line mode)
 bool QConsole::isInEditionZone() {
     const int para = textCursor().blockNumber();
@@ -659,6 +665,7 @@ void QConsole::pExecCommand(const QString &command) {
     } else {
         isLocked = false;
     }
+    multilineCommand.clear();
 
     emit execCommand(command);
 }
