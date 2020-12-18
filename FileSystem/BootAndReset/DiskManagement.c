@@ -54,6 +54,12 @@ struct Drive *createDrive(char filename[256], int size, int block_size, int inod
             fwrite(&empty, sizeof(struct iNode), 1, fp);
         }
 
+        int block_start = ftell(fp);
+        drive->superblock.first_block = block_start;
+        fseek(fp, 0, SEEK_SET);
+        fwrite(drive, sizeof(struct Drive), 1, fp);
+
+        fseek(fp, block_start, SEEK_SET);
         for (int i = 0; i < block_count; i++) {
             fwrite(empty_block, block_size, 1, fp);
         }
