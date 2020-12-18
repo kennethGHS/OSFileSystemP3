@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(CLI LANGUAGES CXX C)
+project(Filesystem LANGUAGES CXX C)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -22,9 +22,9 @@ file(GLOB project_SRC
         "CLI/*.cpp"
         )
 
-add_executable(CLI
+add_executable(Filesystem
         CLI/mainwindow.ui
         ${project_SRC}
         )
 
-target_link_libraries(CLI PRIVATE Qt5::Widgets json-c)
+target_link_libraries(Filesystem PRIVATE Qt5::Widgets json-c)
