@@ -329,6 +329,13 @@ int change_directory(char *filename) {
 int write_file(struct FileDescriptor *fileDescriptor, char *data, int size) {
     printf("%s\t%d\n", data, size);
     struct iNode *inode = malloc(sizeof(struct iNode));
+    if (fileDescriptor == NULL){
+        return 1;
+    }
+    if (fileDescriptor->inode==NULL){
+        printf("File not found");
+        return 1;
+    }
     memcpy(inode, fileDescriptor->inode, sizeof(struct iNode));
     struct Block *block = malloc(working_drive->superblock.block_size);
     unsigned long block_index = working_drive->superblock.first_block;
@@ -493,6 +500,13 @@ int write_file(struct FileDescriptor *fileDescriptor, char *data, int size) {
 
 char *read_file(struct FileDescriptor *fileDescriptor) {
     struct iNode *inode = malloc(sizeof(struct iNode));
+    if (fileDescriptor == NULL){
+        return NULL;
+    }
+    if (fileDescriptor->inode==NULL){
+        printf("File not found");
+        return NULL;
+    }
     memcpy(inode, fileDescriptor->inode, sizeof(struct iNode));
     struct Block *block = malloc(working_drive->superblock.block_size);
     int pointer_index = fileDescriptor->cursor / (working_drive->superblock.block_size - sizeof(enum state_t));
