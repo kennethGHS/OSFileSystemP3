@@ -349,6 +349,7 @@ void QConsole::handleReturnKeyPress() {
     //execute the command and get back its text result and its return value
     if (isCommandComplete(command) && !multiline)
         pExecCommand(command);
+
     else if (multiline && command.isEmpty()) {
         multilineCommand = multilineCommand.remove(QRegExp("\\\\"));
         multilineCommand = multilineCommand.remove(QRegExp("\n"));
@@ -464,6 +465,8 @@ void QConsole::keyPressEvent(QKeyEvent *e) {
                 handleReturnKeyPress();
                 editing = false;
                 pExecCommand(multilineCommand);
+                QTextCursor cur = textCursor();
+                cur.movePosition(QTextCursor::End);
                 multilineCommand.clear();
                 return;
             }
@@ -728,8 +731,10 @@ QString QConsole::processCommand(const QString &command, int id) {
                 if (errno_ == 1) {
                     result = Error;
                     result_string.append("Path doesn't exist");
-                } else if (path == "/") {
-                    setPrompt(new_dir, false);
+                } else if (path == "//") {
+                    setPrompt("/", false);
+                } else if (new_dir[0] == '/') {
+                    setPrompt(path.c_str(), false);
                 } else {
                     std::string old_path = prompt.toStdString();
                     std::string delimiter = "/";
@@ -757,6 +762,7 @@ QString QConsole::processCommand(const QString &command, int id) {
                         new_prompt.append("/");
                     }
                     new_prompt.remove(-1);
+                    new_prompt.replace("//", "/");
                     setPrompt(new_prompt, false);
                 }
                 free(new_dir);
