@@ -454,8 +454,9 @@ int write_file(struct FileDescriptor *fileDescriptor, char *data, int size) {
                         inode->continuation_iNode = continuation_index;
                         fseek(drive_image, inode->index, SEEK_SET);
                         fwrite(inode, sizeof(struct iNode), 1, drive_image);
-                        memcpy(fileDescriptor->inode, inode, sizeof(struct iNode));
-
+                        if(inode->type == FILE_START) {
+                            memcpy(fileDescriptor->inode, inode, sizeof(struct iNode));
+                        }
                         struct iNode *extension = malloc(sizeof(struct iNode));
                         memcpy(extension, inode, sizeof(struct iNode));
                         extension->index = continuation_index;
