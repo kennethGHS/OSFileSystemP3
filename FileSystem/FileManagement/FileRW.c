@@ -290,14 +290,12 @@ static int get_inode_index(char *filename) {
 struct FileDescriptor *open_file(char *filename) {
     // Return file descriptor
     struct iNode *next_dir = open_inode(filename, FILE_START);
-    if(next_dir == NULL){
-        return NULL;
-    }
     struct FileDescriptor *file_descriptor = malloc(sizeof(struct FileDescriptor));
     file_descriptor->cursor = 0;
     file_descriptor->drive = working_drive;
     file_descriptor->inode = next_dir;
     return file_descriptor;
+
 };
 
 int create_dir(char *filename) {
